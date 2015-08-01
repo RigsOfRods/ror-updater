@@ -1,9 +1,0 @@
-C:\Users\Max\Documents\Visual Studio 2013\Projects\ror-updater\ror-updater-list_maker\bin\Debug\ror-updater-list_maker.exe.config
-C:\Users\Max\Documents\Visual Studio 2013\Projects\ror-updater\ror-updater-list_maker\bin\Debug\ror-updater-list_maker.exe
-C:\Users\Max\Documents\Visual Studio 2013\Projects\ror-updater\ror-updater-list_maker\bin\Debug\ror-updater-list_maker.pdb
-C:\Users\Max\Documents\Visual Studio 2013\Projects\ror-updater\ror-updater-list_maker\obj\Debug\ror-updater-list_maker.csprojResolveAssemblyReference.cache
-C:\Users\Max\Documents\Visual Studio 2013\Projects\ror-updater\ror-updater-list_maker\obj\Debug\ror_updater_list_maker.MainWindow.resources
-C:\Users\Max\Documents\Visual Studio 2013\Projects\ror-updater\ror-updater-list_maker\obj\Debug\ror_updater_list_maker.Properties.Resources.resources
-C:\Users\Max\Documents\Visual Studio 2013\Projects\ror-updater\ror-updater-list_maker\obj\Debug\ror-updater-list_maker.csproj.GenerateResource.Cache
-C:\Users\Max\Documents\Visual Studio 2013\Projects\ror-updater\ror-updater-list_maker\obj\Debug\ror-updater-list_maker.exe
-C:\Users\Max\Documents\Visual Studio 2013\Projects\ror-updater\ror-updater-list_maker\obj\Debug\ror-updater-list_maker.pdb
