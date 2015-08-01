@@ -1,0 +1,83 @@
+11:49:00 PM: log started
+11:49:00 PM: searching languages in languages
+11:49:00 PM: no Languages found!
+11:49:00 PM: preferred language: English (U.S.)
+11:49:00 PM: lang file: languages\en\LC_MESSAGES\ror.mo
+11:49:00 PM: language not existing, no lang_locale support!
+11:49:00 PM: Creating dialog
+11:49:00 PM: Known Audio Devices: 
+11:49:00 PM:  *DirectSound Default
+11:49:00 PM:  *Speakers (Realtek High Definition Audio) via DirectSound
+11:49:00 PM:  *WaveOut Default
+11:49:00 PM:  *Speakers (Realtek High Definiti via WaveOut
+11:49:00 PM:  *No Output
+11:49:00 PM: Sound Extensions: 
+11:49:00 PM: Setting default values
+11:49:00 PM: Loading config
+11:49:00 PM: Loading RoR.cfg
+11:49:00 PM: reading from Config file: C:\Users\Max\DOCUME~1\Rigs of Rods 0.4\\config\RoR.cfg
+11:49:00 PM: Creating Ogre root
+11:49:00 PM: Root restore config
+11:49:00 PM: parsed resolution "640 x 480 @ 16-bit colour" as "640 x 480 @ 16-bit"
+11:49:00 PM: discarding resolution as it is below 32 bits: 640 x 480 @ 16-bit colour
+11:49:00 PM: parsed resolution "720 x 480 @ 16-bit colour" as "720 x 480 @ 16-bit"
+11:49:00 PM: discarding resolution as it is below 32 bits: 720 x 480 @ 16-bit colour
+11:49:00 PM: parsed resolution "720 x 576 @ 16-bit colour" as "720 x 576 @ 16-bit"
+11:49:00 PM: discarding resolution as it is below 32 bits: 720 x 576 @ 16-bit colour
+11:49:00 PM: parsed resolution "800 x 600 @ 16-bit colour" as "800 x 600 @ 16-bit"
+11:49:00 PM: discarding resolution as it is below 32 bits: 800 x 600 @ 16-bit colour
+11:49:00 PM: parsed resolution "1024 x 768 @ 16-bit colour" as "1024 x 768 @ 16-bit"
+11:49:00 PM: discarding resolution as it is below 32 bits: 1024 x 768 @ 16-bit colour
+11:49:00 PM: parsed resolution "1152 x 864 @ 16-bit colour" as "1152 x 864 @ 16-bit"
+11:49:00 PM: discarding resolution as it is below 32 bits: 1152 x 864 @ 16-bit colour
+11:49:00 PM: parsed resolution "1280 x 720 @ 16-bit colour" as "1280 x 720 @ 16-bit"
+11:49:00 PM: discarding resolution as it is below 32 bits: 1280 x 720 @ 16-bit colour
+11:49:00 PM: parsed resolution "1280 x 768 @ 16-bit colour" as "1280 x 768 @ 16-bit"
+11:49:00 PM: discarding resolution as it is below 32 bits: 1280 x 768 @ 16-bit colour
+11:49:00 PM: parsed resolution "1280 x 800 @ 16-bit colour" as "1280 x 800 @ 16-bit"
+11:49:00 PM: discarding resolution as it is below 32 bits: 1280 x 800 @ 16-bit colour
+11:49:00 PM: parsed resolution "1280 x 960 @ 16-bit colour" as "1280 x 960 @ 16-bit"
+11:49:00 PM: discarding resolution as it is below 32 bits: 1280 x 960 @ 16-bit colour
+11:49:00 PM: parsed resolution "1280 x 1024 @ 16-bit colour" as "1280 x 1024 @ 16-bit"
+11:49:00 PM: discarding resolution as it is below 32 bits: 1280 x 1024 @ 16-bit colour
+11:49:00 PM: parsed resolution "1360 x 768 @ 16-bit colour" as "1360 x 768 @ 16-bit"
+11:49:00 PM: discarding resolution as it is below 32 bits: 1360 x 768 @ 16-bit colour
+11:49:00 PM: parsed resolution "1366 x 768 @ 16-bit colour" as "1366 x 768 @ 16-bit"
+11:49:00 PM: discarding resolution as it is below 32 bits: 1366 x 768 @ 16-bit colour
+11:49:00 PM: parsed resolution "1600 x 900 @ 16-bit colour" as "1600 x 900 @ 16-bit"
+11:49:00 PM: discarding resolution as it is below 32 bits: 1600 x 900 @ 16-bit colour
+11:49:00 PM: parsed resolution "1600 x 1024 @ 16-bit colour" as "1600 x 1024 @ 16-bit"
+11:49:00 PM: discarding resolution as it is below 32 bits: 1600 x 1024 @ 16-bit colour
+11:49:00 PM: parsed resolution "1600 x 1200 @ 16-bit colour" as "1600 x 1200 @ 16-bit"
+11:49:00 PM: discarding resolution as it is below 32 bits: 1600 x 1200 @ 16-bit colour
+11:49:00 PM: parsed resolution "1680 x 1050 @ 16-bit colour" as "1680 x 1050 @ 16-bit"
+11:49:00 PM: discarding resolution as it is below 32 bits: 1680 x 1050 @ 16-bit colour
+11:49:00 PM: parsed resolution "1920 x 1080 @ 16-bit colour" as "1920 x 1080 @ 16-bit"
+11:49:00 PM: discarding resolution as it is below 32 bits: 1920 x 1080 @ 16-bit colour
+11:49:00 PM: parsed resolution "1440 x 900 @ 16-bit colour" as "1440 x 900 @ 16-bit"
+11:49:00 PM: discarding resolution as it is below 32 bits: 1440 x 900 @ 16-bit colour
+11:49:00 PM: parsed resolution "640 x 480 @ 32-bit colour" as "640 x 480 @ 32-bit"
+11:49:00 PM: discarding resolution as the x res is below 800 pixels: 640 x 480 @ 32-bit colour
+11:49:00 PM: parsed resolution "720 x 480 @ 32-bit colour" as "720 x 480 @ 32-bit"
+11:49:00 PM: discarding resolution as the x res is below 800 pixels: 720 x 480 @ 32-bit colour
+11:49:00 PM: parsed resolution "720 x 576 @ 32-bit colour" as "720 x 576 @ 32-bit"
+11:49:00 PM: discarding resolution as the x res is below 800 pixels: 720 x 576 @ 32-bit colour
+11:49:00 PM: parsed resolution "800 x 600 @ 32-bit colour" as "800 x 600 @ 32-bit"
+11:49:00 PM: parsed resolution "1024 x 768 @ 32-bit colour" as "1024 x 768 @ 32-bit"
+11:49:00 PM: parsed resolution "1152 x 864 @ 32-bit colour" as "1152 x 864 @ 32-bit"
+11:49:00 PM: parsed resolution "1280 x 720 @ 32-bit colour" as "1280 x 720 @ 32-bit"
+11:49:00 PM: parsed resolution "1280 x 768 @ 32-bit colour" as "1280 x 768 @ 32-bit"
+11:49:00 PM: parsed resolution "1280 x 800 @ 32-bit colour" as "1280 x 800 @ 32-bit"
+11:49:00 PM: parsed resolution "1280 x 960 @ 32-bit colour" as "1280 x 960 @ 32-bit"
+11:49:00 PM: parsed resolution "1280 x 1024 @ 32-bit colour" as "1280 x 1024 @ 32-bit"
+11:49:00 PM: parsed resolution "1360 x 768 @ 32-bit colour" as "1360 x 768 @ 32-bit"
+11:49:00 PM: parsed resolution "1366 x 768 @ 32-bit colour" as "1366 x 768 @ 32-bit"
+11:49:00 PM: parsed resolution "1600 x 900 @ 32-bit colour" as "1600 x 900 @ 32-bit"
+11:49:00 PM: parsed resolution "1600 x 1024 @ 32-bit colour" as "1600 x 1024 @ 32-bit"
+11:49:00 PM: parsed resolution "1600 x 1200 @ 32-bit colour" as "1600 x 1200 @ 32-bit"
+11:49:00 PM: parsed resolution "1680 x 1050 @ 32-bit colour" as "1680 x 1050 @ 32-bit"
+11:49:00 PM: parsed resolution "1920 x 1080 @ 32-bit colour" as "1920 x 1080 @ 32-bit"
+11:49:00 PM: parsed resolution "1440 x 900 @ 32-bit colour" as "1440 x 900 @ 32-bit"
+11:49:00 PM: Showing dialog
+11:49:00 PM: App ready
+11:49:03 PM: saving to Config file: C:\Users\Max\DOCUME~1\Rigs of Rods 0.4\\config\RoR.cfg
