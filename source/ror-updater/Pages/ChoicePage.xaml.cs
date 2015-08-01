@@ -18,10 +18,10 @@ namespace ror_updater
     /// <summary>
     /// Interaction logic for MainPage.xaml
     /// </summary>
-    public partial class ChoisePage : UserControl, ISwitchable
+    public partial class ChoicePage : UserControl, ISwitchable
     {
         App mainApp;
-        public ChoisePage(App MainThread)
+        public ChoicePage(App MainThread)
         {
             InitializeComponent();
             mainApp = MainThread;

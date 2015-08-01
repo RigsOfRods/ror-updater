@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="ror_updater.ChoisePage"
+﻿<UserControl x:Class="ror_updater.ChoicePage"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -14,6 +14,7 @@
         <Button x:Name="button_choise3" Content="Repair" HorizontalAlignment="Left" Margin="180,276,0,0" VerticalAlignment="Top" Width="235" Height="45" Click="button_choise1_Click" IsEnabled="False"/>
         <Label x:Name="info_label" Content="." HorizontalAlignment="Left" VerticalAlignment="Top" Margin="21,65,0,0" Width="549" Height="50" FontSize="14"/>
         <Button x:Name="button_choise1" Content="Update" HorizontalAlignment="Left" Margin="180,226,0,0" VerticalAlignment="Top" Width="235" Height="45" Click="button_choise1_Click" IsEnabled="False"/>
+        <Label x:Name="info_label1" Content="Developer mode is enabled!" HorizontalAlignment="Left" Margin="5,480,0,0" VerticalAlignment="Top" Visibility="Hidden"/>
 
     </Grid>
 </UserControl>

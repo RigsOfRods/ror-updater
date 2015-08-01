@@ -28,9 +28,9 @@ namespace ror_updater
         public string str_online_version;
         private string str_updater_version = "1.0.0.0";
         private string str_updater_online_version = "1.0.0.0";
-        public bool forceUpdate = false;
         public BackgroundWorker ProcessUpdateWorker;
         public int listCount;
+        bool DevBuilds;
 
         XmlDocument xml_ListFile;
         XmlNodeList elemList;
@@ -51,10 +51,9 @@ namespace ror_updater
             IniData data = fileIniData.ReadFile("./updater.ini", System.Text.Encoding.ASCII);
             LOG("Info| Done.");
 
-            bool forceUpdate = bool.Parse(data["Main"]["ForceUpdate"]);
-            bool DevBuilds = bool.Parse(data["Main"]["DevBuilds"]);
+            DevBuilds = bool.Parse(data["Main"]["DevBuilds"]);
 
-            LOG("Info| Force Update: " + forceUpdate.ToString() + " DevBuilds: " + DevBuilds.ToString());
+            LOG("Info| DevBuilds: " + DevBuilds.ToString());
 
             //Get app version
             try 
@@ -94,6 +93,7 @@ namespace ror_updater
                 if (result == MessageBoxResult.OK)
                 {
                     LOG("Error| Failed to connect to server.");
+                    LOG(ex.ToString());
                     Quit();
                 }
             }
@@ -148,21 +148,24 @@ namespace ror_updater
                 webClient.DownloadFile(str_server_url + szfile_url, szfile);
             } catch (Exception ex)
             {
-                /* TODO: LOG */
-                MessageBox.Show(ex.ToString());
+                LOG(ex.ToString());
+                MessageBox.Show("Failed to download file:" + szfile_url, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
  
         }
 
+        public void preUpdate()
+        {
+            //To fix progress bad not moving
+            elemList = xml_ListFile.GetElementsByTagName("item");
+            listCount = elemList.Count;
+        }
 
         public void ProcessUpdate()
         {
             bool b_hash = false;
             string s_FileHash = "";
             int round = 0;
-
-            elemList = xml_ListFile.GetElementsByTagName("item");
-            listCount = elemList.Count;
 
             ProcessUpdateWorker.ReportProgress(0);
 
@@ -190,12 +193,11 @@ namespace ror_updater
                         LOG("Info| Done.");
                         
                         round++;
-                        /* TODO: LOG FILE */
                     }
                     else
                     {
                         LOG("Info| file up to date:" + node.Attributes["name"].Value);
-                        round++; /* TODO: LOG FILE */
+                        round++; 
                     }
                 }
                 else if (!File.Exists(node.Attributes["directory"].Value + node.Attributes["name"].Value))
@@ -210,7 +212,7 @@ namespace ror_updater
                 {
                     //Ugh?
                     LOG("Info| file up to date:" + node.Attributes["name"].Value);
-                    round++; /* TODO: LOG FILE */
+                    round++; 
                 }
 
                 ProcessUpdateWorker.ReportProgress(round + 1);

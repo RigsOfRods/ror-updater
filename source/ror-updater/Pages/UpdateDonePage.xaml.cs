@@ -43,7 +43,7 @@ namespace ror_updater
 
         private void button_next_Click(object sender, RoutedEventArgs e)
         {
-            PageManager.Switch(new ChoisePage(mainApp));
+            PageManager.Switch(new ChoicePage(mainApp));
         }
 
     }

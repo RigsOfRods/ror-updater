@@ -29,6 +29,11 @@ namespace ror_updater
             InitializeComponent();
             mainApp = MainThread;
 
+            mainApp.preUpdate();
+
+            MainProgress.Maximum = mainApp.listCount;
+            MainProgress.Value = 0;
+
             mainApp.ProcessUpdateWorker = new BackgroundWorker();
 
             mainApp.ProcessUpdateWorker.WorkerReportsProgress = true;
@@ -40,8 +45,6 @@ namespace ror_updater
 
             mainApp.ProcessUpdateWorker.RunWorkerAsync();
 
-            MainProgress.Maximum = mainApp.listCount;
-            MainProgress.Value = 0;
         }
 
         private void button_back_Click(object sender, RoutedEventArgs e)
@@ -51,7 +54,7 @@ namespace ror_updater
             {
                 mainApp.ProcessUpdateWorker.CancelAsync();
                 killWorker();
-                PageManager.Switch(new ChoisePage(mainApp));
+                PageManager.Switch(new ChoicePage(mainApp));
             }
         }
 
@@ -89,7 +92,7 @@ namespace ror_updater
 
         private void killWorker()
         {
-            mainApp.ProcessUpdateWorker.Dispose();
+            //mainApp.ProcessUpdateWorker.Dispose();
             mainApp.ProcessUpdateWorker = null;
         }
     }

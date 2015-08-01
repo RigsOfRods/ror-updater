@@ -79,8 +79,8 @@
     <Compile Include="Pages\BlankPage.xaml.cs">
       <DependentUpon>BlankPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\ChoisePage.xaml.cs">
-      <DependentUpon>ChoisePage.xaml</DependentUpon>
+    <Compile Include="Pages\ChoicePage.xaml.cs">
+      <DependentUpon>ChoicePage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pages\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
@@ -110,7 +110,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Pages\ChoisePage.xaml">
+    <Page Include="Pages\ChoicePage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

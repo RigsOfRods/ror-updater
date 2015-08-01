@@ -1,4 +1,6 @@
 
+*.user
+*.suo
 source/ror-updater/bin
 source/ror-updater/obj
 source/ror-updater-list_maker/bin
