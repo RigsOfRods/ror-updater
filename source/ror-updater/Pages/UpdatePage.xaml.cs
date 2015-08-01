@@ -63,9 +63,9 @@ namespace ror_updater
 
         private void worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            //update ui once worker complete his work
-            button_next.IsEnabled = true;
-            button_cancel.IsEnabled = false;
+            //Move to next page
+            killWorker();
+            PageManager.Switch(new UpdateDonePage(mainApp));
         }
 
         private void worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
@@ -84,8 +84,7 @@ namespace ror_updater
 
         private void button_next_Click(object sender, RoutedEventArgs e)
         {
-            killWorker();
-            PageManager.Switch(new UpdateDonePage(mainApp));
+            //Nothing here
         }
 
         private void killWorker()
