@@ -95,5 +95,10 @@ namespace ror_updater
             //mainApp.ProcessUpdateWorker.Dispose();
             mainApp.ProcessUpdateWorker = null;
         }
+
+        public void recvData(string[] str, int[] num)
+        {
+            //MainProgress.Value = int.Parse(str[1]);
+        }
     }
 }

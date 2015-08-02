@@ -26,8 +26,8 @@ namespace ror_updater
         public string str_server_url = "http://192.223.29.127/rigsofrods/ror_updater/";
         public string str_local_version;
         public string str_online_version;
-        private string str_updater_version = "1.0.0.0";
-        private string str_updater_online_version = "1.0.0.0";
+        public string str_updater_version = "1.0.0.1";
+        private string str_updater_online_version;
         public BackgroundWorker ProcessUpdateWorker;
         public int listCount;
         bool DevBuilds;
@@ -40,8 +40,10 @@ namespace ror_updater
 
         public void InitApp(object sender, StartupEventArgs e)
         {
-            //Clean logs first
+            //Clean up first
             File.Delete("Updater_log.txt");
+            File.Delete("ror-updater_selfupdate.exe");
+
             LOG("Info| RoR_Updater ver:" + str_updater_version);
 
             LOG("Info| Creating INI handler");
@@ -55,7 +57,8 @@ namespace ror_updater
 
             LOG("Info| DevBuilds: " + DevBuilds.ToString());
 
-            //Get app version
+            //Get app version3
+            MessageBoxResult result; 
             try 
             {
                 //Use Product version instead of file version because we can use it to separate Dev version from release versions, same for TestBuilds
@@ -71,17 +74,21 @@ namespace ror_updater
 
                 //Todo: Make it install the game too.
                 LOG("Error| Game Not found!");
-                MessageBox.Show("Game not found! \nMove me to game's root folder!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                Quit();
+                result = MessageBox.Show("Game not found! \nMove me to game's root folder!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                //Make the app wait and not continue
+                if (result == MessageBoxResult.OK)
+                    Quit();
             }
 
             LOG("Info| Creating Web Handler");
             webClient = new WebClient();
+            webClient.DownloadProgressChanged += new DownloadProgressChangedEventHandler(client_DownloadProgressChanged);
             LOG("Info| Done.");
 
             //Download list
             LOG("Info| Downloading main list from server: " + str_server_url);
-            MessageBoxResult result; 
+           
             try
             {
                 webClient.DownloadFile(str_server_url + "List.xml", @"./List.xml");
@@ -113,6 +120,9 @@ namespace ror_updater
             }
 
             LOG("Succes| Initialization done!");
+
+            if (str_updater_version != str_updater_online_version)
+                processSelfUpdate();
 
             pageSwitcher = new PageSwitcher(this);
             pageSwitcher.Show();
@@ -146,6 +156,7 @@ namespace ror_updater
             {
                 File.Delete(szfile);
                 webClient.DownloadFile(str_server_url + szfile_url, szfile);
+               // webClient.DownloadFileAsync(new Uri(str_server_url + szfile_url), szfile);
             } catch (Exception ex)
             {
                 LOG(ex.ToString());
@@ -154,9 +165,24 @@ namespace ror_updater
  
         }
 
+        void processSelfUpdate()
+        {
+            webClient.DownloadFile(str_server_url + "ror-updater_new.exe", @"./ror-updater_new.exe");
+
+            Thread.Sleep(10); //Wait a bit
+
+            string path = "ror-updater_selfupdate.exe";
+            File.WriteAllBytes(path, ror_updater.Properties.Resources.ror_updater_selfupdate);
+
+            Thread.Sleep(100); //Wait a bit
+            Process.Start(path);
+
+            Quit();
+        }
+
         public void preUpdate()
         {
-            //To fix progress bad not moving
+            //To fix progress bar not moving
             elemList = xml_ListFile.GetElementsByTagName("item");
             listCount = elemList.Count;
         }
@@ -229,6 +255,25 @@ namespace ror_updater
         public void Quit()
         {
             Application.Current.Shutdown();
+        }
+
+        void client_DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
+        {
+            Dispatcher.BeginInvoke(new Action(delegate
+            {
+                double bytesIn = double.Parse(e.BytesReceived.ToString());
+                double totalBytes = double.Parse(e.TotalBytesToReceive.ToString());
+                double percentage = bytesIn / totalBytes * 100;
+
+                string[] _str = null;
+                int[] _int = null;
+
+                _str[0] = "Downloaded " + e.BytesReceived + " of " + e.TotalBytesToReceive;
+                //_int[0] = int.Parse(Math.Truncate(percentage).ToString());
+
+                PageManager.pageSwitcher.sendData(_str, _int);
+
+            }));
         }
 
     }

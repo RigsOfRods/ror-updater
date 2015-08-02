@@ -40,6 +40,10 @@ namespace ror_updater
             
         }
 
+        public void recvData(string[] str, int[] num)
+        { 
+
+        }
 
     }
 }

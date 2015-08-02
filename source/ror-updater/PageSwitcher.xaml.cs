@@ -41,6 +41,17 @@ namespace ror_updater
             mainApp.Quit();
         }
 
+        //Sends data to the current open page
+        public void sendData(string[] str, int[] num)
+        {
+            ISwitchable s = currPage as ISwitchable;
+
+            if (s != null)
+                s.recvData(str, num);
+            else
+                throw new ArgumentException("NextPage is not ISwitchable! " + currPage.Name.ToString());
+        }
+
         public UserControl getCurrPage()
         {
             return currPage;

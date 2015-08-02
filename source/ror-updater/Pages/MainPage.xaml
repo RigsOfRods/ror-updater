@@ -12,6 +12,7 @@
         <Button x:Name="button_next" Content="Next" HorizontalAlignment="Left" Margin="493,480,0,0" VerticalAlignment="Top" Width="75" Click="button_next_Click"/>
         <Button x:Name="button_quit" Content="Quit" HorizontalAlignment="Left" Margin="411,480,0,0" VerticalAlignment="Top" Width="75" Click="button_quit_Click"/>
         <Button Content="Next" HorizontalAlignment="Left" Margin="320,480,0,0" VerticalAlignment="Top" Width="75" Visibility="Hidden"/>
+        <Label x:Name="updater_version" Content="dummy" HorizontalAlignment="Left" Margin="8,480,0,0" VerticalAlignment="Top"/>
 
     </Grid>
 </UserControl>

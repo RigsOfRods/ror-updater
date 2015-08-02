@@ -63,5 +63,10 @@ namespace ror_updater
             mainApp.LOG("Info| Selected update.");
         }
 
+        public void recvData(string[] str, int[] num)
+        {
+
+        }
+
     }
 }

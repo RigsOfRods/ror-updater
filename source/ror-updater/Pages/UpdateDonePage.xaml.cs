@@ -46,5 +46,9 @@ namespace ror_updater
             PageManager.Switch(new ChoicePage(mainApp));
         }
 
+        public void recvData(string[] str, int[] num)
+        {
+
+        }
     }
 }
