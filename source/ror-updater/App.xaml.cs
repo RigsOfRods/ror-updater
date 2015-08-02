@@ -15,6 +15,7 @@ using IniParser;
 using IniParser.Model;
 using System.ComponentModel;
 using System.Security.Cryptography;
+using System.Windows.Threading;
 
 namespace ror_updater
 {
@@ -26,27 +27,41 @@ namespace ror_updater
         public string str_server_url = "http://192.223.29.127/rigsofrods/ror_updater/";
         public string str_local_version;
         public string str_online_version;
-        public string str_updater_version = "1.0.0.1";
+        public string str_updater_version = "1.0.0.4";
         private string str_updater_online_version;
-        public BackgroundWorker ProcessUpdateWorker;
         public int listCount;
         bool DevBuilds;
+        bool b_Init = false;
+        bool b_SelfUpdating = false;
 
         XmlDocument xml_ListFile;
         XmlNodeList elemList;
 
         PageSwitcher pageSwitcher;
         WebClient webClient;
+        private Dispatcher _dispatcher;
+        public BackgroundWorker ProcessUpdateWorker;
+        private BackgroundWorker InitDialog = new BackgroundWorker();
+
+        StartupForm sForm;
 
         public void InitApp(object sender, StartupEventArgs e)
         {
             //Clean up first
             File.Delete("Updater_log.txt");
+            File.Delete("updater.exe"); //We don't need this anymore
             File.Delete("ror-updater_selfupdate.exe");
 
             LOG("Info| RoR_Updater ver:" + str_updater_version);
 
+            _dispatcher = Dispatcher.CurrentDispatcher;
+
+            //Show something so users don't get confused
+            InitDialog.DoWork += InitDialog_DoWork;
+            InitDialog.RunWorkerAsync();
+
             LOG("Info| Creating INI handler");
+
             //Proceed
             var fileIniData = new FileIniDataParser();
             fileIniData.Parser.Configuration.CommentString = "#";
@@ -124,8 +139,13 @@ namespace ror_updater
             if (str_updater_version != str_updater_online_version)
                 processSelfUpdate();
 
+            b_Init = true;
+
+            InitDialog = null; //We don't need it anymore.. :3
+   
             pageSwitcher = new PageSwitcher(this);
             pageSwitcher.Show();
+            pageSwitcher.Activate();
         }
 
         public string GetFileHash(string file)
@@ -167,6 +187,8 @@ namespace ror_updater
 
         void processSelfUpdate()
         {
+            b_SelfUpdating = true;
+
             webClient.DownloadFile(str_server_url + "ror-updater_new.exe", @"./ror-updater_new.exe");
 
             Thread.Sleep(10); //Wait a bit
@@ -259,7 +281,7 @@ namespace ror_updater
 
         void client_DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
         {
-            Dispatcher.BeginInvoke(new Action(delegate
+            _dispatcher.BeginInvoke(new Action(delegate
             {
                 double bytesIn = double.Parse(e.BytesReceived.ToString());
                 double totalBytes = double.Parse(e.TotalBytesToReceive.ToString());
@@ -275,6 +297,24 @@ namespace ror_updater
 
             }));
         }
+        private void InitDialog_DoWork(object sender, DoWorkEventArgs e)
+        {
+            // Very dirty way to do this. :/
+            sForm = new StartupForm();
+            sForm.Show();
+            
+            while(!b_Init)
+            {
+                //meh?
+                Thread.Sleep(500);
+                if(b_SelfUpdating)
+                    sForm.label1.Text = "Updating...";
 
+                sForm.Update();
+            }
+
+            sForm.Hide();
+            sForm = null;
+        }
     }
 }
