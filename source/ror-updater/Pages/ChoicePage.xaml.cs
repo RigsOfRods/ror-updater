@@ -27,9 +27,12 @@ namespace ror_updater
             mainApp = MainThread;
             mainApp.LOG("Info| Choise menu opened.");
 
+            if (mainApp.b_DevBuilds)
+                info_label.Content = "You have dev builds enabled! You'll be updated to unstable test builds if you continue!";
+
             //TODO: Install button is disabled for the moment.
             //Repair game is also update game, both do the same, both do their work.
-            if (mainApp.str_local_version != mainApp.str_online_version)
+            if (mainApp.str_local_version != mainApp.str_online_version || mainApp.str_online_devbuild != mainApp.str_local_devbuild)
             {
                 button_choise1.IsEnabled = true;
                 button_choise2.IsEnabled = false;

@@ -27,10 +27,15 @@ namespace ror_updater
         public string str_server_url = "http://192.223.29.127/rigsofrods/ror_updater/";
         public string str_local_version;
         public string str_online_version;
-        public string str_updater_version = "1.0.0.4";
+        public string str_updater_version = "1.0.0.5";
+        public string str_online_devbuild = "0";
+        public string str_local_devbuild = "0";
         private string str_updater_online_version;
+
         public int listCount;
-        bool DevBuilds;
+
+        public bool b_DevBuilds;
+        bool b_skipUpdates;
         bool b_Init = false;
         bool b_SelfUpdating = false;
 
@@ -44,6 +49,9 @@ namespace ror_updater
         private BackgroundWorker InitDialog = new BackgroundWorker();
 
         StartupForm sForm;
+
+        private FileIniDataParser fileIniData;
+        private IniData data;
 
         public void InitApp(object sender, StartupEventArgs e)
         {
@@ -60,19 +68,44 @@ namespace ror_updater
             InitDialog.DoWork += InitDialog_DoWork;
             InitDialog.RunWorkerAsync();
 
+            LOG("Info| Creating Web Handler");
+            webClient = new WebClient();
+            webClient.DownloadProgressChanged += new DownloadProgressChangedEventHandler(client_DownloadProgressChanged);
+            LOG("Info| Done.");
+
             LOG("Info| Creating INI handler");
 
             //Proceed
-            var fileIniData = new FileIniDataParser();
+            fileIniData = new FileIniDataParser();
             fileIniData.Parser.Configuration.CommentString = "#";
-            IniData data = fileIniData.ReadFile("./updater.ini", System.Text.Encoding.ASCII);
+
+            //Dirty code incoming!
+            try
+            {
+                data = fileIniData.ReadFile("./updater.ini", System.Text.Encoding.ASCII);
+            } 
+            catch (Exception ex)
+            {
+                ProcessBadConfig(ex);
+            }
+
+            Thread.Sleep(100); //Wait a bit
+
+            try
+            {
+                b_DevBuilds = bool.Parse(data["Main"]["DevBuilds"]);
+                b_skipUpdates = bool.Parse(data["Dev"]["SkipUpdates"]);
+                str_local_devbuild = data["Dev"]["DevBuildVer"].ToString();
+            } 
+            catch (Exception ex)
+            {
+                ProcessBadConfig(ex);
+            }
+
             LOG("Info| Done.");
+            LOG("Info| DevBuilds: " + b_DevBuilds.ToString() + " Skip_updates: " + b_skipUpdates.ToString() + " DevBuildNum: " + str_local_devbuild);
 
-            DevBuilds = bool.Parse(data["Main"]["DevBuilds"]);
-
-            LOG("Info| DevBuilds: " + DevBuilds.ToString());
-
-            //Get app version3
+            //Get app version
             MessageBoxResult result; 
             try 
             {
@@ -95,11 +128,6 @@ namespace ror_updater
                 if (result == MessageBoxResult.OK)
                     Quit();
             }
-
-            LOG("Info| Creating Web Handler");
-            webClient = new WebClient();
-            webClient.DownloadProgressChanged += new DownloadProgressChangedEventHandler(client_DownloadProgressChanged);
-            LOG("Info| Done.");
 
             //Download list
             LOG("Info| Downloading main list from server: " + str_server_url);
@@ -132,12 +160,22 @@ namespace ror_updater
             {
                 str_online_version = elemList[i].Attributes["ror"].Value;
                 str_updater_online_version = elemList[i].Attributes["version"].Value;
+
+                //Temporary
+                //Forced dev mode
+                if (str_online_version.EndsWith("-dev"))
+                    b_DevBuilds = true;
+
+                if (b_DevBuilds)
+                    str_online_devbuild = elemList[i].Attributes["dev"].Value;
             }
 
             LOG("Succes| Initialization done!");
 
-            if (str_updater_version != str_updater_online_version)
-                processSelfUpdate();
+#if (!DEBUG)
+            if (str_updater_version != str_updater_online_version && !b_skipUpdates)
+                processSelfUpdate();      
+#endif
 
             b_Init = true;
 
@@ -215,6 +253,9 @@ namespace ror_updater
             string s_FileHash = "";
             int round = 0;
 
+            if (!checkGameStructureAndFix())
+                return;
+
             ProcessUpdateWorker.ReportProgress(0);
 
             foreach (XmlNode node in xml_ListFile.SelectNodes("server/files/item[@id]"))
@@ -264,6 +305,15 @@ namespace ror_updater
                 }
 
                 ProcessUpdateWorker.ReportProgress(round + 1);
+
+                if (b_DevBuilds)
+                {
+                    data["Dev"]["DevBuildVer"] = str_online_devbuild;
+                    str_local_devbuild = str_online_devbuild;
+                }
+
+                //Always save ini
+                fileIniData.WriteFile("updater.ini", data);
             }
         }
 
@@ -276,7 +326,7 @@ namespace ror_updater
         }
         public void Quit()
         {
-            Application.Current.Shutdown();
+            Process.GetCurrentProcess().Kill();
         }
 
         void client_DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
@@ -315,6 +365,50 @@ namespace ror_updater
 
             sForm.Hide();
             sForm = null;
+        }
+
+        private bool checkGameStructureAndFix()
+        {
+            try
+            {
+                LOG("Info| start checkGameStructureAndFix");
+                string[] dirs = Directory.GetDirectories(@"./resources");
+                foreach (string dir in dirs)
+                {
+                    if (!dir.EndsWith("managed_materials")) //delete all other folders except managed_materials
+                    {
+                        if (Directory.Exists(dir))
+                        {
+                            LOG("Info| Deleted: " + dir.ToString());
+                            Directory.Delete(dir, true);
+                        }
+                    }
+                }
+            } catch (Exception ex)
+            {
+                LOG("Error| Something bad happened: " + ex.ToString());
+                MessageBox.Show("Something bad happened!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                return false;
+            }
+
+            LOG("Info| done checkGameStructureAndFix");
+            return true;
+        }
+
+        void ProcessBadConfig(Exception ex)
+        {
+            LOG("Error| Failed to read ini file, downloading new updater.ini.");
+            LOG(ex.ToString());
+            
+            File.Delete("updater.ini");
+
+            webClient.DownloadFile(str_server_url + "updater.ini", @"./updater.ini");
+
+            MessageBox.Show("Please restart the updater!"); 
+
+            //Kill it
+            Quit();
         }
     }
 }

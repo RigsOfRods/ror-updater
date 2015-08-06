@@ -27,7 +27,11 @@ namespace ror_updater
             mainApp = MainThread;
             local_version.Content = "Local version: " + mainApp.str_local_version;
             online_version.Content = "Online version: " + mainApp.str_online_version;
-            updater_version.Content = mainApp.str_updater_version;
+
+            if (mainApp.b_DevBuilds)
+                updater_version.Content = mainApp.str_updater_version + " - developer build";
+            else
+                updater_version.Content = mainApp.str_updater_version;
         }
 
 
