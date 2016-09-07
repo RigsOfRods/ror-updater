@@ -1,9 +1,10 @@
-
 *.user
 *.suo
-source/ror-updater/bin
-source/ror-updater/obj
-source/ror-updater-list_maker/bin
-source/ror-updater-list_maker/obj
-source/ror_updater_selfupdate/bin
-source/ror_updater_selfupdate/obj
+Client/ror-updater/bin
+Client/ror-updater/obj
+Client/.vs
+
+*.pfx
+
+**/packages/*
+!**/packages/repositories.config
