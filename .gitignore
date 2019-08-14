@@ -8,3 +8,8 @@ Client/.vs
 
 **/packages/*
 !**/packages/repositories.config
+
+node_modules
+Server/win32/*
+!Server/win32/Put files in here
+Server/\.idea/

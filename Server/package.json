@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "express": "^4.17.1",
+    "md5-file": "^4.0.0",
+    "recursive-readdir": "^2.2.2"
+  }
+}
