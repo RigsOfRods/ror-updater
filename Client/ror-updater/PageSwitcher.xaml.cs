@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with ror-updater. If not, see <http://www.gnu.org/licenses/>.
 // 
+
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -27,15 +28,13 @@ namespace ror_updater
     /// </summary>
     public partial class PageSwitcher : Window
     {
-        private readonly App _mainApp;
         private UserControl _currPage;
 
-        public PageSwitcher(App mainThread)
+        public PageSwitcher()
         {
             InitializeComponent();
             PageManager.pageSwitcher = this;
-            PageManager.Switch(new MainPage(mainThread));
-            _mainApp = mainThread;
+            PageManager.Switch(new MainPage());
         }
 
         public void Navigate(UserControl nextPage)

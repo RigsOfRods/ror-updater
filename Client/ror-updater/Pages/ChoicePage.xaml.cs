@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with ror-updater. If not, see <http://www.gnu.org/licenses/>.
 // 
+
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -25,28 +26,24 @@ namespace ror_updater
     /// </summary>
     public partial class ChoicePage : UserControl, ISwitchable
     {
-        private readonly App _mainApp;
 
-        public ChoicePage(App mainThread)
+        public ChoicePage()
         {
             InitializeComponent();
-            _mainApp = mainThread;
             Utils.LOG("Info| Choise menu opened.");
-
-            if (App.BDevBuilds)
-                info_label.Content =
-                    "You have dev builds enabled! You'll be updated to unstable test builds if you continue!";
 
             //Repair game is also update game, both do the same, both do their work.
 
-            if (_mainApp.StrLocalVersion == "unknown")
+            if (App.Instance.StrLocalVersion == "unknown")
             {
+                info_label.Content = "No game found";
                 Update_button.IsEnabled = false;
                 Repair_button.IsEnabled = false;
                 Install_button.IsEnabled = true;
             }
-            else if (_mainApp.StrLocalVersion != _mainApp.StrOnlineVersion)
+            else if (App.Instance.StrLocalVersion != App.Instance.StrOnlineVersion)
             {
+                info_label.Content = "Your game is out of date!";
                 Update_button.IsEnabled = true;
                 Repair_button.IsEnabled = false;
                 Install_button.IsEnabled = false;
@@ -75,28 +72,28 @@ namespace ror_updater
 
         private void button_back_Click(object sender, RoutedEventArgs e)
         {
-            PageManager.Switch(new MainPage(_mainApp));
+            PageManager.Switch(new MainPage());
         }
 
         private void Install_button_Click(object sender, RoutedEventArgs e)
         {
             Utils.LOG("Info| Selected Install.");
-            App.Choise = UpdateChoise.INSTALL;
-            PageManager.Switch(new UpdatePage(_mainApp));
+            App.Choice = UpdateChoice.INSTALL;
+            PageManager.Switch(new UpdatePage());
         }
 
         private void Repair_button_Click(object sender, RoutedEventArgs e)
         {
             Utils.LOG("Info| Selected Repair.");
-            App.Choise = UpdateChoise.REPAIR;
-            PageManager.Switch(new UpdatePage(_mainApp));
+            App.Choice = UpdateChoice.REPAIR;
+            PageManager.Switch(new UpdatePage());
         }
 
         private void Update_button_Click(object sender, RoutedEventArgs e)
         {
             Utils.LOG("Info| Selected Update.");
-            App.Choise = UpdateChoise.UPDATE;
-            PageManager.Switch(new UpdatePage(_mainApp));
+            App.Choice = UpdateChoice.UPDATE;
+            PageManager.Switch(new UpdatePage());
         }
     }
 }

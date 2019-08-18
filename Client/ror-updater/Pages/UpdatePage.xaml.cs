@@ -14,13 +14,18 @@
 // You should have received a copy of the GNU General Public License
 // along with ror-updater. If not, see <http://www.gnu.org/licenses/>.
 // 
+
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.IO;
 using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 
 namespace ror_updater
 {
@@ -29,195 +34,141 @@ namespace ror_updater
     /// </summary>
     public partial class UpdatePage : UserControl, ISwitchable
     {
-        private readonly App _mainApp;
         private readonly WebClient _webClient;
-        private readonly BackgroundWorker _worker;
-        private int _fileid;
-        public UpdatePage ThisPage;
 
-        public UpdatePage(App mainThread)
+        public UpdatePage()
         {
             InitializeComponent();
             ((INotifyCollectionChanged) LogWindow.Items).CollectionChanged += ListView_CollectionChanged;
-            _mainApp = mainThread;
-            ThisPage = this;
-
-            _worker = new BackgroundWorker();
-            _worker.DoWork += WorkerOnDoWork;
-            _worker.RunWorkerCompleted += WorkerOnRunWorkerCompleted;
-            _worker.WorkerSupportsCancellation = true;
-
-            OverallProgress.Maximum = App.FilesInfo.Count;
 
             _webClient = new WebClient();
+
+            OverallProgress.Maximum = App.FilesInfo.Count;
             _webClient.DownloadProgressChanged += ProgressChanged;
 
-            switch (App.Choise)
+            RunFileUpdate();
+        }
+
+        private async void RunFileUpdate()
+        {
+            // The Progress<T> constructor captures our UI context,
+            //  so the lambda will be run on the UI thread.
+            // https://blog.stephencleary.com/2012/02/reporting-progress-from-async-tasks.html
+            var progress = new Progress<int>(fileid =>
             {
-                case UpdateChoise.INSTALL:
-                    _webClient.DownloadFileCompleted += InstallDownloadFileCompleted;
+                OverallProgress.Value = fileid;
+                ProgressLabel.Content = fileid + "/" + App.FilesInfo.Count;
+            });
+
+            // DoProcessing is run on the thread pool.
+            switch (App.Choice)
+            {
+                case UpdateChoice.INSTALL:
                     Welcome_Label.Content = "Installing Rigs of Rods";
-                    InstallGame();
+                    await Task.Run(() => InstallGame(progress));
                     break;
-                case UpdateChoise.UPDATE:
-                    _webClient.DownloadFileCompleted += UpdateDownloadFileCompleted;
+                case UpdateChoice.UPDATE:
                     Welcome_Label.Content = "Updating Rigs of Rods";
-                    UpdateGame();
+                    await Task.Run(() => UpdateGame(progress));
                     break;
-                case UpdateChoise.REPAIR:
-                    _webClient.DownloadFileCompleted += UpdateDownloadFileCompleted;
+                case UpdateChoice.REPAIR:
                     Welcome_Label.Content = "Repairing Rigs of Rods";
-                    UpdateGame();
+                    await Task.Run(() => UpdateGame(progress));
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
 
-        private void InstallGame()
+        private void InstallGame(IProgress<int> progress)
         {
             Utils.LOG("Info| Installing Game...");
 
-            var item = App.FilesInfo[0];
-            Utils.LOG("Info| Downloading file:" + item.fileName);
-            Utils.DownloadFile(_webClient, item.directory + "/" + item.fileName, item.directory);
+            for (var i = 0; i < App.FilesInfo.Count; i++)
+            {
+                var file = App.FilesInfo[i];
+                AddToLogFile($"Downloading file: {file.directory.TrimStart('.')}/{file.fileName}");
+                DownloadFile(file.dlLink, file.directory, file.fileName);
+                progress?.Report(i);
+            }
+
             Utils.LOG("Info| Done.");
+            NextPage();
         }
 
-        private void UpdateGame()
+        private void UpdateGame(IProgress<int> progress)
         {
             Utils.LOG("Info| Updating Game...");
 
-            if (!Utils.CheckGameStructureAndFix())
-                NextPage();
+            var _fileStatus = new List<FileStatus>();
 
-            _worker.RunWorkerAsync();
-        }
-
-        private void InstallDownloadFileCompleted(object sender, AsyncCompletedEventArgs asyncCompletedEventArgs)
-        {
-            Utils.LOG("Info| Done.");
-            _fileid++;
-
-            if (_fileid >= App.FilesInfo.Count) NextPage();
-
-            else
+            AddToLogFile($"Checking for outdated files...");
+            for (var i = 0; i < App.FilesInfo.Count; i++)
             {
-                UpdateUi();
-                var item = App.FilesInfo[_fileid];
-
-                Utils.LOG("Info| Downloading file:" + item.fileName);
-                LogWindow.Items.Add("Downloading file: " + item.directory.TrimStart('.') + "/" + item.fileName);
-                Utils.DownloadFile(_webClient, item.directory + "/" + item.fileName, item.directory);
-            }
-        }
-
-        private void UpdateDownloadFileCompleted(object sender, AsyncCompletedEventArgs asyncCompletedEventArgs)
-        {
-            Update();
-        }
-
-        private void WorkerOnRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs runWorkerCompletedEventArgs)
-        {
-            if (runWorkerCompletedEventArgs.Error != null)
-            {
-                Utils.LOG("Worker|Error:" + runWorkerCompletedEventArgs.Error);
+                var file = App.FilesInfo[i];
+                var fs = HashFile(file);
+                AddToLogFile($"Checking file: {file.directory.TrimStart('.')}/{file.fileName}");
+                _fileStatus.Add(new FileStatus {File = file, Status = fs});
+                progress?.Report(i);
             }
 
-            else
+            AddToLogFile($"Done, updating outdated files now...");
+
+            for (var i = 0; i < _fileStatus.Count; i++)
             {
-                var result = (HashResult) runWorkerCompletedEventArgs.Result;
-                var item = App.FilesInfo[_fileid];
-                switch (result)
+                var item = _fileStatus[i];
+                progress?.Report(i);
+
+                switch (item.Status)
                 {
                     case HashResult.UPTODATE:
-                        Utils.LOG("Info| file up to date:" + item.fileName);
-                        LogWindow.Items.Add("File up to date: " + item.directory.TrimStart('.') + "/" + item.fileName);
+                        Utils.LOG($"Info| file up to date:{item.File.fileName}");
+                        AddToLogFile($"File up to date: {item.File.directory.TrimStart('.')}/{item.File.fileName}");
                         break;
                     case HashResult.OUTOFDATE:
-                        LogWindow.Items.Add("File out of date: " + item.directory.TrimStart('.') + "/" + item.fileName);
-                        Utils.LOG("Info| File out of date:" + item.fileName);
-                        Utils.DownloadFile(_webClient, item.directory + "/" + item.fileName, item.directory);
+                        AddToLogFile($"File out of date: {item.File.directory.TrimStart('.')}/{item.File.fileName}");
+                        Utils.LOG($"Info| File out of date:{item.File.fileName}");
+                        DownloadFile(item.File.dlLink, item.File.directory, item.File.fileName);
                         break;
                     case HashResult.NOT_FOUND:
-                        Utils.LOG("Info| File doesnt exits:" + item.fileName);
-                        LogWindow.Items.Add("Downloading file: " + item.directory.TrimStart('.') + "/" + item.fileName);
-                        Utils.DownloadFile(_webClient, item.directory + "/" + item.fileName, item.directory);
+                        Utils.LOG($"Info| File doesnt exits:{item.File.fileName}");
+                        AddToLogFile(
+                            $"Downloading new file: {item.File.directory.TrimStart('.')}/{item.File.fileName}");
+                        DownloadFile(item.File.dlLink, item.File.directory, item.File.fileName);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
             }
 
-            if (_webClient.IsBusy)
-                return;
-
-            Update();
-        }
-
-        private void Update()
-        {
-            Utils.LOG("Info| Done. ");
-            _fileid++;
-
-            if (_fileid >= App.FilesInfo.Count)
-                NextPage();
-
-            else
-            {
-                UpdateUi();
-                _worker.RunWorkerAsync();
-            }
-        }
-
-        private void WorkerOnDoWork(object sender, DoWorkEventArgs doWorkEventArgs)
-        {
-            var item = App.FilesInfo[_fileid];
-            string sFileHash = null;
-            var filePath = item.directory + "/" + item.fileName;
-
-            Utils.LOG("Info| Checking file: " + item.fileName);
-
-            if (File.Exists(filePath))
-            {
-                sFileHash = Utils.GetFileHash(filePath);
-                Utils.LOG("Info| " + item.fileName + " Hash: Local: " + sFileHash.ToLower() + " Online:" +
-                          item.fileHash.ToLower());
-                doWorkEventArgs.Result = sFileHash.ToLower() == item.fileHash.ToLower()
-                    ? HashResult.UPTODATE
-                    : HashResult.OUTOFDATE;
-            }
-            else
-                doWorkEventArgs.Result = HashResult.NOT_FOUND;
+            Utils.LOG("Info| Done.");
+            NextPage();
         }
 
         private void button_back_Click(object sender, RoutedEventArgs e)
         {
             var result = MessageBox.Show("Are you sure you want to stop the update?", "Confirmation",
                 MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (result == MessageBoxResult.Yes)
-            {
-                _worker.CancelAsync();
-                _webClient.CancelAsync();
-                PageManager.Switch(new ChoicePage(_mainApp));
-            }
+            if (result != MessageBoxResult.Yes) return;
+            _webClient.CancelAsync();
+            PageManager.Switch(new ChoicePage());
+        }
+
+
+        private void AddToLogFile(string s)
+        {
+            Dispatcher.BeginInvoke(new Action(() => { LogWindow.Items.Add(s); }));
         }
 
         private void NextPage()
         {
-            PageManager.Switch(new UpdateDonePage(_mainApp));
+            Dispatcher.BeginInvoke(new Action(() => { PageManager.Switch(new UpdateDonePage()); }));
         }
 
         private void ProgressChanged(object sender, DownloadProgressChangedEventArgs e)
         {
             //update ui
             DownloadProgress.Value = e.ProgressPercentage;
-        }
-
-        private void UpdateUi()
-        {
-            OverallProgress.Value = _fileid;
-            ProgressLabel.Content = _fileid + "/" + App.FilesInfo.Count;
         }
 
         private void button_next_Click(object sender, RoutedEventArgs e)
@@ -230,6 +181,50 @@ namespace ror_updater
         {
             if (e.Action == NotifyCollectionChangedAction.Add)
                 LogWindow.ScrollIntoView(e.NewItems[0]);
+        }
+
+        HashResult HashFile(RoRUpdaterItem item)
+        {
+            string sFileHash = null;
+            var filePath = $"{item.directory}/{item.fileName}";
+
+            Utils.LOG($"Info| Checking file: {item.fileName}");
+
+            if (!File.Exists(filePath)) return HashResult.NOT_FOUND;
+            sFileHash = Utils.GetFileHash(filePath);
+            Utils.LOG($"Info| {item.fileName} Hash: Local: {sFileHash.ToLower()} Online:{item.fileHash.ToLower()}");
+            return sFileHash.ToLower().Equals(item.fileHash.ToLower())
+                ? HashResult.UPTODATE
+                : HashResult.OUTOFDATE;
+        }
+
+        private void DownloadFile(string dlLink, string dir, string file)
+        {
+            if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+
+            Thread.Sleep(100);
+            var dest = $"{dir}/{file}";
+
+            try
+            {
+                Utils.LOG($"Info| ULR: {dlLink}");
+                Utils.LOG($"Info| File: {dest}");
+                _webClient.DownloadFile(new Uri(dlLink), dest);
+            }
+            catch (Exception ex)
+            {
+                Utils.LOG(ex.ToString());
+                MessageBox.Show($"Failed to download file:{dest}", "Error", MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+
+
+        private class FileStatus
+        {
+            public RoRUpdaterItem File;
+            public HashResult Status;
         }
 
         private enum HashResult
