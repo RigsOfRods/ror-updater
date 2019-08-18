@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with ror-updater. If not, see <http://www.gnu.org/licenses/>.
 // 
+
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -25,12 +26,10 @@ namespace ror_updater
     /// </summary>
     public partial class BlankPage : UserControl, ISwitchable
     {
-        private App mainApp;
 
-        public BlankPage(App MainThread)
+        public BlankPage()
         {
             InitializeComponent();
-            mainApp = MainThread;
         }
 
         #region ISwitchable Members

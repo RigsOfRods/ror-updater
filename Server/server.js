@@ -2,32 +2,45 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const md5File = require('md5-file');
-var recursive = require("recursive-readdir");
-var config = require("./config.js");
+const recursive = require("recursive-readdir");
+const config = require("./config.js");
 
 const app = express();
-const FileList = [];
-
+let FileList = "";
+const configJson = JSON.stringify(config);
 const dir = path.normalize(__dirname + "/win32/");
 
 recursive(dir, (err, files) => {
+    const list = [];
+    console.log("Generating file list");
     files.forEach(file => {
-        FileList.push({
-            filename: path.normalize(file).replace(dir, "").replace(/\\/g,"/"),
-            hash: md5File.sync(file)
+        list.push({
+            directory: path.dirname(path.normalize(file).replace(dir, "")),
+            fileName: path.basename(file),
+            fileHash: md5File.sync(file),
+            dlLink: config.FileCDN + path.normalize(file).replace(dir, "").replace(/\\/g,"/")
         })
     });
+    console.log("Generating file done");
+    FileList = JSON.stringify(list);
 });
 
 
-app.get('/', function (req, res) {
+app.get('/fileList', function (req, res) {
     res.append('content-type', 'application/json');
-    res.send(JSON.stringify(FileList));
+    res.send(FileList);
 });
 
 app.get('/version', function (req, res) {
     res.append('content-type', 'application/json');
-    res.send(JSON.stringify(config.RoRversion));
+    res.send(configJson);
+});
+
+const iniContent = fs.readFileSync(__dirname + "/updater.ini");
+
+app.get('/updater.ini', function (req, res) {
+    res.append('content-type', 'text/plain');
+    res.send(iniContent);
 });
 
 

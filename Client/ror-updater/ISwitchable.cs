@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with ror-updater. If not, see <http://www.gnu.org/licenses/>.
 // 
+
 namespace ror_updater
 {
     public interface ISwitchable

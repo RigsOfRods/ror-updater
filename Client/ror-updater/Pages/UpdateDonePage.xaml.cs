@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with ror-updater. If not, see <http://www.gnu.org/licenses/>.
 // 
+
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -25,13 +26,10 @@ namespace ror_updater
     /// </summary>
     public partial class UpdateDonePage : UserControl, ISwitchable
     {
-        private readonly App mainApp;
-
-        public UpdateDonePage(App MainThread)
+        public UpdateDonePage()
         {
             InitializeComponent();
-            mainApp = MainThread;
-            mainApp.StrLocalVersion = mainApp.StrOnlineVersion;
+            App.Instance.StrLocalVersion = App.Instance.StrOnlineVersion;
         }
 
         #region ISwitchable Members
@@ -53,7 +51,7 @@ namespace ror_updater
 
         private void button_next_Click(object sender, RoutedEventArgs e)
         {
-            PageManager.Switch(new ChoicePage(mainApp));
+            PageManager.Switch(new ChoicePage());
         }
     }
 }

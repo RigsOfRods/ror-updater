@@ -25,10 +25,8 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Windows;
-using System.Windows.Threading;
 using IniParser;
 using IniParser.Model;
-using Microsoft.HockeyApp;
 using Newtonsoft.Json;
 
 namespace ror_updater
@@ -38,14 +36,11 @@ namespace ror_updater
     /// </summary>
     public partial class App : Application
     {
-        public IniData IniSettingsData;
-
-        public FileIniDataParser IniDataParser;
-
-        public static string StrServerUrl = "http://update.rigsofrods.org/";
+        public static string StrServerUrl = "https://a-random-vps.cf/";
         public static List<RoRUpdaterItem> FilesInfo;
 
-        public static UpdateChoise Choise;
+        public static UpdateChoice Choice;
+        
         private bool _bInit;
         private bool _bSkipUpdates;
 
@@ -56,52 +51,47 @@ namespace ror_updater
         private PageSwitcher _pageSwitcher;
 
         private StartupForm _sForm;
+        private string _downloadLink;
 
-        public static bool BDevBuilds;
+        private FileIniDataParser _iniDataParser;
+        private IniData _iniSettingsData;
 
         public string StrLocalVersion;
         public string StrOnlineVersion = "0";
+        private string _strUpdaterOnlineVersion;
 
-        public string StrUpdaterVersion;
-        public string StrUpdaterOnlineVersion;
-        public string DownloadLink;
+        private string _strUpdaterVersion;
 
-        public WebClient WebClient;
+        private WebClient _webClient;
 
 
         public void InitApp(object sender, StartupEventArgs e)
         {
-           
-            HockeyClient.Current.Configure("b1a60e07ff0e462a927012fdb07f1c72");
-
-            //Clean up first
-            File.Delete("Updater_log.txt");
-            File.Delete("updater.exe"); //We don't need this anymore
-
+            File.WriteAllText(@"./Updater_log.txt", "");
+            
             //Show something so users don't get confused
             _initDialog.DoWork += InitDialog_DoWork;
             _initDialog.RunWorkerAsync();
 
-
-            Assembly assembly = Assembly.GetExecutingAssembly();
-            FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
-            StrUpdaterVersion = fileVersionInfo.ProductVersion;
-            Utils.LOG("Info| Updater version: " + StrUpdaterVersion);
+            var assembly = Assembly.GetExecutingAssembly();
+            var fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
+            _strUpdaterVersion = fileVersionInfo.ProductVersion;
+            Utils.LOG($"Info| Updater version: {_strUpdaterVersion}");
 
             Utils.LOG("Info| Creating Web Handler");
-            WebClient = new WebClient();
+            _webClient = new WebClient();
             Utils.LOG("Info| Done.");
 
             Utils.LOG("Info| Creating INI handler");
 
             //Proceed
-            IniDataParser = new FileIniDataParser();
-            IniDataParser.Parser.Configuration.CommentString = "#";
+            _iniDataParser = new FileIniDataParser();
+            _iniDataParser.Parser.Configuration.CommentString = "#";
 
             //Dirty code incoming!
             try
             {
-                IniSettingsData = IniDataParser.ReadFile("./updater.ini", Encoding.ASCII);
+                _iniSettingsData = _iniDataParser.ReadFile("./updater.ini", Encoding.ASCII);
             }
             catch (Exception ex)
             {
@@ -112,8 +102,7 @@ namespace ror_updater
 
             try
             {
-                BDevBuilds = bool.Parse(IniSettingsData["Main"]["DevBuilds"]);
-                _bSkipUpdates = bool.Parse(IniSettingsData["Dev"]["SkipUpdates"]);
+                _bSkipUpdates = bool.Parse(_iniSettingsData["Dev"]["SkipUpdates"]);
             }
             catch (Exception ex)
             {
@@ -121,38 +110,29 @@ namespace ror_updater
             }
 
             Utils.LOG("Info| Done.");
-            Utils.LOG("Info| DevBuilds: " + BDevBuilds + " Skip_updates: " + _bSkipUpdates);
+            Utils.LOG($"Info| Skip_updates: {_bSkipUpdates}");
 
             //Get app version
             MessageBoxResult result;
 
             //Download list
-            Utils.LOG("Info| Downloading main list from server: " + StrServerUrl + "update-list.php?DevBuilds=" + BDevBuilds);
+            Utils.LOG($"Info| Downloading main list from server: {StrServerUrl}fileList");
 
             try
             {
-                _jsonInfoFile = WebClient.DownloadString(StrServerUrl + "update-list.php?DevBuilds=" + BDevBuilds);
+                _jsonInfoFile = _webClient.DownloadString($"{StrServerUrl}fileList");
 
-                var jsonVersionInfo = WebClient.DownloadString(StrServerUrl + "/versions.php");
+                var jsonVersionInfo = _webClient.DownloadString($"{StrServerUrl}version");
                 var versionInfo = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonVersionInfo);
 
-                if (!versionInfo.TryGetValue("Updater", out StrUpdaterOnlineVersion) ||
-                    !versionInfo.TryGetValue("Updater-DL", out DownloadLink))              
-                                      throw new ApplicationException("Failed to get Versioninfo.");
-
-                if (BDevBuilds)
-                {
-                    if(!versionInfo.TryGetValue("Rigs-of-Rods", out StrOnlineVersion))
+                if (!versionInfo.TryGetValue("Updater", out _strUpdaterOnlineVersion) ||
+                    !versionInfo.TryGetValue("UpdaterDL", out _downloadLink) ||
+                    !versionInfo.TryGetValue("RoRVersion", out StrOnlineVersion))
                     throw new ApplicationException("Failed to get Versioninfo.");
-                }
-                else
-                {
-                    if (!versionInfo.TryGetValue("Rigs-of-Rods-Dev", out StrOnlineVersion))
-                    throw new ApplicationException("Failed to get Versioninfo.");
-                }
+                
 
-                Utils.LOG("Info| Updater: " + StrUpdaterOnlineVersion);
-                Utils.LOG("Info| Rigs-of-Rods: " + StrOnlineVersion);
+                Utils.LOG($"Info| Updater: {_strUpdaterOnlineVersion}");
+                Utils.LOG($"Info| Rigs-of-Rods: {StrOnlineVersion}");
                 Utils.LOG("Info| Done.");
             }
             catch (Exception ex)
@@ -167,9 +147,8 @@ namespace ror_updater
                 }
             }
 
-            
 
-            if (StrUpdaterVersion != StrUpdaterOnlineVersion && !_bSkipUpdates)
+            if (_strUpdaterVersion != _strUpdaterOnlineVersion && !_bSkipUpdates)
                 ProcessSelfUpdate();
 
             Thread.Sleep(10); //Wait a bit
@@ -191,6 +170,7 @@ namespace ror_updater
                     Quit();
                 }
             }
+
             try
             {
                 //Use Product version instead of file version because we can use it to separate Dev version from release versions, same for TestBuilds
@@ -213,7 +193,7 @@ namespace ror_updater
 
             _initDialog = null; //We don't need it anymore.. :3
 
-            _pageSwitcher = new PageSwitcher(this);
+            _pageSwitcher = new PageSwitcher();
             _pageSwitcher.Show();
             _pageSwitcher.Activate();
         }
@@ -222,20 +202,18 @@ namespace ror_updater
         {
             var result = MessageBox.Show("New version available.", "Update", MessageBoxButton.OK,
                 MessageBoxImage.Information);
-            if (result == MessageBoxResult.OK)
+            if (result != MessageBoxResult.OK) return;
+            Utils.LOG($"Update| New version available: {_strUpdaterOnlineVersion}");
+            try
             {
-                Utils.LOG("Update| New version available: " + StrUpdaterOnlineVersion);
-
-                try
-                {
-                    Process.Start(DownloadLink);
-                }
-                catch 
-                {                 
-                }
-
-                Quit();
+                Process.Start(_downloadLink);
             }
+            catch
+            {
+                // ignored
+            }
+
+            Quit();
         }
 
         public static void Quit()
@@ -249,18 +227,31 @@ namespace ror_updater
             _sForm = new StartupForm();
             _sForm.Show();
 
-            
+
             while (!_bInit)
             {
                 //meh?
                 Thread.Sleep(500);
-                
+
                 _sForm.Update();
             }
 
             _sForm.Hide();
             _sForm = null;
         }
+        
+        #region Singleton
+
+        private static Lazy<App> _lazyApp;
+
+        public static App Instance => _lazyApp.Value;
+
+        private App()
+        {
+            _lazyApp = new Lazy<App>(() => this);
+        }
+
+        #endregion
     }
 
     public class RoRUpdaterItem
@@ -268,10 +259,10 @@ namespace ror_updater
         public string directory;
         public string fileHash;
         public string fileName;
-        public int id;
+        public string dlLink;
     }
 
-    public enum UpdateChoise
+    public enum UpdateChoice
     {
         INSTALL,
         UPDATE,

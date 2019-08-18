@@ -3,7 +3,7 @@
 Client/ror-updater/bin
 Client/ror-updater/obj
 Client/.vs
-
+.idea
 *.pfx
 
 **/packages/*
