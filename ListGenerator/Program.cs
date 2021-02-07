@@ -34,27 +34,26 @@ namespace list_generator
 
             var fullPath = Path.GetFullPath(path);
 
-            List<PFileInfo> _filelist = new List<PFileInfo>();
+            List<PFileInfo> filelist = new List<PFileInfo>();
             var filePaths = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories);
-            var i = 0;
             foreach (var fileName in filePaths)
             {
-                Thread.Sleep(10);
+                // Skip info.json
+                if(fileName.Contains("info.json"))
+                    continue;
+                
+                Console.WriteLine($"Hashing {fileName}");
 
                 var fileInfo = new FileInfo(fileName);
                 var fileD = fileInfo.Directory?.ToString();
                 var dir = fileD.Replace(fullPath, ".");
 
-                _filelist.Add(new PFileInfo
+                filelist.Add(new PFileInfo
                 {
                     Name = fileInfo.Name,
                     Directory = dir.Replace("\\", "/"),
                     Hash = Utils.GetFileHash(fileInfo.FullName)
                 });
-
-                Console.Write($"\r{i}/{filePaths.Length}\r");
-
-                i++;
             }
 
             var versionInfo = FileVersionInfo.GetVersionInfo(path + "/RoR.exe");
@@ -65,7 +64,7 @@ namespace list_generator
                 new ReleaseInfo
                 {
                     Version = strLocalVersion,
-                    Filelist = _filelist
+                    Filelist = filelist
                 }
             ));
             
