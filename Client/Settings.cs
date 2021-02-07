@@ -9,7 +9,7 @@ namespace ror_updater
         public void SetDefaults()
         {
             SkipUpdates = false;
-            ServerUrl = "https://test.anotherfoxguy.com";
+            ServerUrl = "https://update.rigsofrods.org";
             Branch = "release";
         }
     }
