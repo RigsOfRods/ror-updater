@@ -18,7 +18,7 @@ AppPublisher={#InstallerPublisher}
 AppPublisherURL={#InstallerURL}
 AppSupportURL={#InstallerURL}
 AppUpdatesURL={#InstallerURL}
-DefaultDirName={pf}\Rigs of Rods
+DefaultDirName={commonpf}\Rigs of Rods
 DefaultGroupName=Rigs of Rods
 DisableProgramGroupPage=yes
 LicenseFile=LICENSE
@@ -53,6 +53,7 @@ Source: "Client\bin\Release\*.dll"; DestDir: "{app}"; Flags: ignoreversion creat
 [Icons]
 ; Start Menu
 Name: "{group}\Rigs of Rods"; Filename: "{app}\RoR.exe"; IconFilename: "{app}\ror.ico"; IconIndex: 0
+Name: "{group}\Rigs of Rods Updater"; Filename: "{app}\ror-updater.exe"
 Name: "{group}\{cm:UninstallProgram,{#InstallerName}}"; Filename: "{uninstallexe}"
 ; Desktop
 Name: "{commondesktop}\Rigs of Rods"; Filename: "{app}\RoR.exe"; IconFilename: "{app}\ror.ico"; IconIndex: 0; Tasks: desktopicon
