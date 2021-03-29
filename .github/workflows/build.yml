@@ -1,0 +1,14 @@
+---
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: Windows build
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2.3.4
+      - name: Build
+        run: |
+          msbuild /p:Configuration=Release /p:Platform="Any CPU" /m ror-updater.sln
