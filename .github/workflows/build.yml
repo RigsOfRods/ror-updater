@@ -1,7 +1,7 @@
 ---
 name: Build
 
-on: [push, pull_request]
+on: [ push, pull_request ]
 
 jobs:
   build:
@@ -9,6 +9,11 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2.3.4
+
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1
+
       - name: Build
         run: |
-          msbuild /p:Configuration=Release /p:Platform="Any CPU" /m ror-updater.sln
+          nuget restore ror-updater.sln
+          msbuild /p:Configuration=Release /p:Platform="Any CPU" -p:RestorePackagesConfig=true /m ror-updater.sln
