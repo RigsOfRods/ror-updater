@@ -1,0 +1,3 @@
+file(COPY ${CMAKE_SOURCE_DIR}/Client/bin/Release/        DESTINATION ${CMAKE_SOURCE_DIR}/redist/client/          FILES_MATCHING PATTERN "*.exe" PATTERN "*.dll" PATTERN "*.config")
+file(COPY ${CMAKE_SOURCE_DIR}/ListGenerator/bin/Release/ DESTINATION ${CMAKE_SOURCE_DIR}/redist/listgenerator/   FILES_MATCHING PATTERN "*.exe" PATTERN "*.dll" PATTERN "*.config")
+file(COPY ${CMAKE_SOURCE_DIR}/SelfUpdater/bin/Release/   DESTINATION ${CMAKE_SOURCE_DIR}/redist/selfupdater/     FILES_MATCHING PATTERN "*.exe" PATTERN "*.dll" PATTERN "*.config")
