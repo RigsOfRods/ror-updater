@@ -1,4 +1,3 @@
----
 name: Build
 
 on: [ push, pull_request ]
@@ -17,3 +16,24 @@ jobs:
         run: |
           nuget restore ror-updater.sln
           msbuild /p:Configuration=Release /p:Platform="Any CPU" -p:RestorePackagesConfig=true /m ror-updater.sln
+
+      - name: Create redis folder
+        run: cmake -P ./tools/copy_build.cmake
+
+      - name: Upload client
+        uses: actions/upload-artifact@v2
+        with:
+          name: client
+          path: redist/client
+
+      - name: Upload listgenerator
+        uses: actions/upload-artifact@v2
+        with:
+          name: listgenerator
+          path: redist/listgenerator
+    
+      - name: Upload client
+        uses: actions/upload-artifact@v2
+        with:
+          name: selfupdater
+          path: redist/selfupdater

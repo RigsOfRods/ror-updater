@@ -413,3 +413,5 @@ MigrationBackup/
 # End of https://www.toptal.com/developers/gitignore/api/rider,visualstudio
 
 Build/
+
+redist/
