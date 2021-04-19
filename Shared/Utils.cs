@@ -45,5 +45,19 @@ namespace ror_updater
                 }
             }
         }
+        
+        public static bool FileIsInUse(string sFilename)
+        {
+            try
+            {
+                using var inputStream = File.Open(sFilename, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+                var _ = inputStream.Length;
+                return false;
+            }
+            catch (Exception)
+            {
+                return true;
+            }
+        }
     }
 }
