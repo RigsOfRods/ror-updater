@@ -44,11 +44,18 @@ ShowLanguageDialog=no
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "install_directx"; Description: "Install DirectX9 runtime"
+Name: "install_vsredist"; Description: "Install VS2019 Redist"
 
 [Files]
 Source: "Client\bin\Release\ror-updater.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Client\bin\Release\ror-updater.exe.config"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Icons\ror.ico"; DestDir: "{app}"
 Source: "Client\bin\Release\*.dll"; DestDir: "{app}"; Flags: ignoreversion createallsubdirs recursesubdirs
+; DirectX
+Source: "Tools\DirectX\*"; DestDir: "{tmp}"; Flags: createallsubdirs recursesubdirs deleteafterinstall overwritereadonly ignoreversion uninsremovereadonly; Tasks: install_directx
+; VS redist
+Source: "Tools\VSRedist\*"; DestDir: "{tmp}"; Flags: createallsubdirs recursesubdirs deleteafterinstall overwritereadonly ignoreversion uninsremovereadonly; Tasks: install_vsredist
 
 [Icons]
 ; Start Menu
@@ -59,4 +66,10 @@ Name: "{group}\{cm:UninstallProgram,{#InstallerName}}"; Filename: "{uninstallexe
 Name: "{commondesktop}\Rigs of Rods"; Filename: "{app}\RoR.exe"; IconFilename: "{app}\ror.ico"; IconIndex: 0; Tasks: desktopicon
 
 [Run]
+; DirectX
+Filename: "{tmp}\DXSETUP.exe"; Parameters: "/silent"; WorkingDir: "{tmp}"; Flags: waituntilterminated skipifdoesntexist runascurrentuser; StatusMsg: "Installing DirectX..."; Tasks: install_directx
+; VS redist
+Filename: "{tmp}\vc_redist.x64.exe"; Parameters: "/install /passive /norestart"; WorkingDir: "{tmp}"; Flags: waituntilterminated skipifdoesntexist runascurrentuser; StatusMsg: "Installing Visual Studio Redistributable (x64)..."; Tasks: install_vsredist
+Filename: "{tmp}\vc_redist.x86.exe"; Parameters: "/install /passive /norestart"; WorkingDir: "{tmp}"; Flags: waituntilterminated skipifdoesntexist runascurrentuser; StatusMsg: "Installing Visual Studio Redistributable (x86)..."; Tasks: install_vsredist
+; Run the updater
 Filename: "{app}\ror-updater.exe"; WorkingDir: "{app}"; Flags: nowait
