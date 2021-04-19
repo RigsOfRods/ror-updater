@@ -60,7 +60,7 @@ namespace ror_updater
             _sForm.Show();
             // Render the form
             _sForm.Update();
-            
+
             var currdir = Directory.GetCurrentDirectory();
             File.WriteAllText($"{currdir}/Updater_log.txt", "");
 
@@ -70,6 +70,13 @@ namespace ror_updater
             var fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
             _localUpdaterVersion = fileVersionInfo.ProductVersion;
             Utils.LOG($"Info| Updater version: {_localUpdaterVersion}");
+
+            if (File.Exists("RoR.exe") && Utils.FileIsInUse("RoR.exe"))
+            {
+                Utils.LOG($"Error| game in use");
+                MessageBox.Show("Please close the game before starting the updater", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Quit();
+            }
 
             Utils.LOG("Info| Creating Web Handler");
             _webClient = new WebClient();
@@ -209,11 +216,11 @@ namespace ror_updater
             }
 
             Settings.Branch = branchname;
-            
+
             CDNUrl = SelectedBranch.Url.Contains("http")
                 ? SelectedBranch.Url
                 : $"{Settings.ServerUrl}/{SelectedBranch.Url}";
-            
+
             try
             {
                 var dat = _webClient.DownloadString($"{CDNUrl}/info.json");
@@ -226,6 +233,7 @@ namespace ror_updater
                     MessageBoxImage.Error);
                 SentrySdk.CaptureException(ex);
             }
+
             Utils.LOG($"Info| Switched to branch: {SelectedBranch.Name} Version: {ReleaseInfoData.Version}");
         }
 
