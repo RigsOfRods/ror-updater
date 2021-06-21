@@ -27,11 +27,12 @@ namespace ror_updater
 {
     internal class Utils
     {
+        internal static readonly string LogPath = $"{Path.GetTempPath()}/RoR_Updater_Log.txt";
+
         public static void LOG(string str)
         {
-            var file = new StreamWriter("./Updater_log.txt", true);
+            var file = new StreamWriter(LogPath, true);
             file.WriteLine(str);
-
             file.Close();
         }
 
@@ -45,7 +46,7 @@ namespace ror_updater
                 }
             }
         }
-        
+
         public static bool FileIsInUse(string sFilename)
         {
             try

@@ -61,10 +61,9 @@ namespace ror_updater
             // Render the form
             _sForm.Update();
 
-            var currdir = Directory.GetCurrentDirectory();
-            File.WriteAllText($"{currdir}/Updater_log.txt", "");
+            File.WriteAllText(Utils.LogPath, "Updater Started");
 
-            SentrySdk.ConfigureScope(scope => { scope.AddAttachment($"{currdir}/Updater_log.txt"); });
+            SentrySdk.ConfigureScope(scope => { scope.AddAttachment(Utils.LogPath); });
 
             var assembly = Assembly.GetExecutingAssembly();
             var fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
@@ -74,7 +73,8 @@ namespace ror_updater
             if (File.Exists("RoR.exe") && Utils.FileIsInUse("RoR.exe"))
             {
                 Utils.LOG($"Error| game in use");
-                MessageBox.Show("Please close the game before starting the updater", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Please close the game before starting the updater", "Error", MessageBoxButton.OK,
+                    MessageBoxImage.Error);
                 Quit();
             }
 
@@ -82,11 +82,13 @@ namespace ror_updater
             _webClient = new WebClient();
             Utils.LOG("Info| Done.");
 
-            if (File.Exists($"{currdir}/ror-updater-settings.json"))
+            var currentDirectory = Directory.GetCurrentDirectory();
+
+            if (File.Exists($"{currentDirectory}/ror-updater-settings.json"))
             {
                 try
                 {
-                    var set = File.ReadAllText($"{currdir}/ror-updater-settings.json");
+                    var set = File.ReadAllText($"{currentDirectory}/ror-updater-settings.json");
                     Settings = JsonConvert.DeserializeObject<Settings>(set);
                 }
                 catch (Exception ex)
