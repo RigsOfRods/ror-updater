@@ -44,7 +44,7 @@ namespace ror_updater
             }
             catch (Exception ex)
             {
-                Utils.LOG(ex.ToString());
+                Utils.LOG(Utils.LogVerb.ERROR, ex.ToString());
             }
         }
 
