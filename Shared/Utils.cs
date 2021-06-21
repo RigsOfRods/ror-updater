@@ -29,10 +29,26 @@ namespace ror_updater
     {
         internal static readonly string LogPath = $"{Path.GetTempPath()}/RoR_Updater_Log.txt";
 
-        public static void LOG(string str)
+        internal enum LogVerb
+        {
+            DEBUG,
+            INFO,
+            ERROR
+        }
+
+        public static void LOG(LogVerb verb, string str)
         {
             var file = new StreamWriter(LogPath, true);
-            file.WriteLine(str);
+
+            var prefix = verb switch
+            {
+                LogVerb.DEBUG => "Debug",
+                LogVerb.INFO => "Info",
+                LogVerb.ERROR => "Error",
+                _ => ""
+            };
+
+            file.WriteLine($"{prefix} | {str}");
             file.Close();
         }
 

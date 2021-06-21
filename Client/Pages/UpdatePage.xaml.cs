@@ -83,7 +83,7 @@ namespace ror_updater
 
         private async Task InstallGame(IProgress<int> progress)
         {
-            Utils.LOG("Info| Installing Game...");
+            Utils.LOG(Utils.LogVerb.INFO, "Installing Game...");
 
             var i = 0;
             foreach (var file in App.Instance.ReleaseInfoData.Filelist)
@@ -93,12 +93,12 @@ namespace ror_updater
                 progress?.Report(i++);
             }
 
-            Utils.LOG("Info| Done.");
+            Utils.LOG(Utils.LogVerb.INFO, "Done.");
         }
 
         private async Task UpdateGame(IProgress<int> progress)
         {
-            Utils.LOG("Info| Updating Game...");
+            Utils.LOG(Utils.LogVerb.INFO, "Updating Game...");
 
             var filesStatus = new List<FileStatus>();
 
@@ -122,16 +122,16 @@ namespace ror_updater
                 switch (item.Status)
                 {
                     case HashResult.UPTODATE:
-                        Utils.LOG($"Info| file up to date: {item.File.Name}");
+                        Utils.LOG(Utils.LogVerb.INFO, $"file up to date: {item.File.Name}");
                         AddToLogFile($"File up to date: {item.File.Directory.TrimStart('.')}/{item.File.Name}");
                         break;
                     case HashResult.OUTOFDATE:
                         AddToLogFile($"File out of date: {item.File.Directory.TrimStart('.')}/{item.File.Name}");
-                        Utils.LOG($"Info| File out of date: {item.File.Name}");
+                        Utils.LOG(Utils.LogVerb.INFO, $"File out of date: {item.File.Name}");
                         await DownloadFile(item.File.Directory, item.File.Name);
                         break;
                     case HashResult.NOT_FOUND:
-                        Utils.LOG($"Info| File doesnt exits: {item.File.Name}");
+                        Utils.LOG(Utils.LogVerb.INFO, $"File doesnt exits: {item.File.Name}");
                         AddToLogFile(
                             $"Downloading new file: {item.File.Directory.TrimStart('.')}/{item.File.Name}");
                         await DownloadFile(item.File.Directory, item.File.Name);
@@ -141,7 +141,7 @@ namespace ror_updater
                 }
             }
 
-            Utils.LOG("Info| Done.");
+            Utils.LOG(Utils.LogVerb.INFO, "Done.");
         }
 
         private void button_back_Click(object sender, RoutedEventArgs e)
@@ -181,11 +181,12 @@ namespace ror_updater
             string sFileHash = null;
             var filePath = $"{item.Directory}/{item.Name}";
 
-            Utils.LOG($"Info| Checking file: {item.Name}");
+            Utils.LOG(Utils.LogVerb.INFO, $"Checking file: {item.Name}");
 
             if (!File.Exists(filePath)) return HashResult.NOT_FOUND;
             sFileHash = Utils.GetFileHash(filePath);
-            Utils.LOG($"Info| {item.Name} Hash: Local: {sFileHash.ToLower()} Online: {item.Hash.ToLower()}");
+            Utils.LOG(Utils.LogVerb.INFO,
+                $"{item.Name} Hash: Local: {sFileHash.ToLower()} Online: {item.Hash.ToLower()}");
             return sFileHash.ToLower().Equals(item.Hash.ToLower())
                 ? HashResult.UPTODATE
                 : HashResult.OUTOFDATE;
@@ -203,19 +204,19 @@ namespace ror_updater
 
             try
             {
-                Utils.LOG($"Info| ULR: {dlLink}");
-                Utils.LOG($"Info| File: {dest}");
+                Utils.LOG(Utils.LogVerb.INFO, $"ULR: {dlLink}");
+                Utils.LOG(Utils.LogVerb.INFO, $"File: {dest}");
                 await _webClient.DownloadFileTaskAsync(new Uri(dlLink), dest);
             }
             catch (Exception ex)
             {
-                Utils.LOG(ex.ToString());
+                Utils.LOG(Utils.LogVerb.ERROR, ex.ToString());
                 MessageBox.Show($"Failed to download file: {dest}", "Error", MessageBoxButton.OK,
                     MessageBoxImage.Error);
                 SentrySdk.CaptureException(ex);
             }
         }
-        
+
         private class FileStatus
         {
             public PFileInfo File;
