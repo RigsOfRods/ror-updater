@@ -27,29 +27,31 @@ namespace ror_updater
 {
     internal class Utils
     {
-        internal static readonly string LogPath = $"{Path.GetTempPath()}/RoR_Updater_Log.txt";
+        internal static readonly string LogPath = $@"{Path.GetTempPath()}RoR_Updater_Log.txt";
 
-        internal enum LogVerb
+        internal enum LogPrefix
         {
             DEBUG,
             INFO,
             ERROR
         }
 
-        public static void LOG(LogVerb verb, string str)
+        public static void LOG(LogPrefix prefix, string str)
         {
-            var file = new StreamWriter(LogPath, true);
-
-            var prefix = verb switch
+            StreamWriter file;
+            lock (file = new StreamWriter(LogPath, true))
             {
-                LogVerb.DEBUG => "Debug",
-                LogVerb.INFO => "Info",
-                LogVerb.ERROR => "Error",
-                _ => ""
-            };
+                var pf = prefix switch
+                {
+                    LogPrefix.DEBUG => "Debug",
+                    LogPrefix.INFO => "Info",
+                    LogPrefix.ERROR => "Error",
+                    _ => ""
+                };
 
-            file.WriteLine($"{prefix} | {str}");
-            file.Close();
+                file.WriteLine($"{pf} | {str}");
+                file.Close();
+            }
         }
 
         public static string GetFileHash(string filename)
