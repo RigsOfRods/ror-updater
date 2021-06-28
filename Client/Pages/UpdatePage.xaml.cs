@@ -35,6 +35,8 @@ namespace ror_updater
     {
         private readonly WebClient _webClient;
 
+        private readonly CancellationTokenSource _cancel = new();
+
         public UpdatePage()
         {
             InitializeComponent();
@@ -64,15 +66,15 @@ namespace ror_updater
             {
                 case UpdateChoice.INSTALL:
                     Welcome_Label.Content = "Installing Rigs of Rods";
-                    await Task.Run(() => InstallGame(progress));
+                    await Task.Run(() => InstallGame(progress), _cancel.Token);
                     break;
                 case UpdateChoice.UPDATE:
                     Welcome_Label.Content = "Updating Rigs of Rods";
-                    await Task.Run(() => UpdateGame(progress));
+                    await Task.Run(() => UpdateGame(progress), _cancel.Token);
                     break;
                 case UpdateChoice.REPAIR:
                     Welcome_Label.Content = "Repairing Rigs of Rods";
-                    await Task.Run(() => UpdateGame(progress));
+                    await Task.Run(() => UpdateGame(progress), _cancel.Token);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -83,22 +85,23 @@ namespace ror_updater
 
         private async Task InstallGame(IProgress<int> progress)
         {
-            Utils.LOG(Utils.LogVerb.INFO, "Installing Game...");
+            Utils.LOG(Utils.LogPrefix.INFO, "Installing Game...");
 
             var i = 0;
             foreach (var file in App.Instance.ReleaseInfoData.Filelist)
             {
+                if (_cancel.IsCancellationRequested) break;
                 AddToLogFile($"Downloading file: {file.Directory.TrimStart('.')}/{file.Name}");
                 await DownloadFile(file.Directory, file.Name);
                 progress?.Report(i++);
             }
 
-            Utils.LOG(Utils.LogVerb.INFO, "Done.");
+            Utils.LOG(Utils.LogPrefix.INFO, "Done.");
         }
 
         private async Task UpdateGame(IProgress<int> progress)
         {
-            Utils.LOG(Utils.LogVerb.INFO, "Updating Game...");
+            Utils.LOG(Utils.LogPrefix.INFO, "Updating Game...");
 
             var filesStatus = new List<FileStatus>();
 
@@ -106,6 +109,7 @@ namespace ror_updater
             var i = 0;
             foreach (var file in App.Instance.ReleaseInfoData.Filelist)
             {
+                if (_cancel.IsCancellationRequested) break;
                 var fileStatus = HashFile(file);
                 AddToLogFile($"Checking file: {file.Directory.TrimStart('.')}/{file.Name}");
                 filesStatus.Add(new FileStatus {File = file, Status = fileStatus});
@@ -117,21 +121,22 @@ namespace ror_updater
             i = 0;
             foreach (var item in filesStatus)
             {
+                if (_cancel.IsCancellationRequested) break;
                 progress?.Report(i++);
 
                 switch (item.Status)
                 {
                     case HashResult.UPTODATE:
-                        Utils.LOG(Utils.LogVerb.INFO, $"file up to date: {item.File.Name}");
+                        Utils.LOG(Utils.LogPrefix.INFO, $"file up to date: {item.File.Name}");
                         AddToLogFile($"File up to date: {item.File.Directory.TrimStart('.')}/{item.File.Name}");
                         break;
                     case HashResult.OUTOFDATE:
                         AddToLogFile($"File out of date: {item.File.Directory.TrimStart('.')}/{item.File.Name}");
-                        Utils.LOG(Utils.LogVerb.INFO, $"File out of date: {item.File.Name}");
+                        Utils.LOG(Utils.LogPrefix.INFO, $"File out of date: {item.File.Name}");
                         await DownloadFile(item.File.Directory, item.File.Name);
                         break;
                     case HashResult.NOT_FOUND:
-                        Utils.LOG(Utils.LogVerb.INFO, $"File doesnt exits: {item.File.Name}");
+                        Utils.LOG(Utils.LogPrefix.INFO, $"File doesnt exits: {item.File.Name}");
                         AddToLogFile(
                             $"Downloading new file: {item.File.Directory.TrimStart('.')}/{item.File.Name}");
                         await DownloadFile(item.File.Directory, item.File.Name);
@@ -141,7 +146,7 @@ namespace ror_updater
                 }
             }
 
-            Utils.LOG(Utils.LogVerb.INFO, "Done.");
+            Utils.LOG(Utils.LogPrefix.INFO, "Done.");
         }
 
         private void button_back_Click(object sender, RoutedEventArgs e)
@@ -149,11 +154,13 @@ namespace ror_updater
             var result = MessageBox.Show("Are you sure you want to stop the update?", "Confirmation",
                 MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (result != MessageBoxResult.Yes) return;
+            _cancel.Cancel();
             _webClient.CancelAsync();
+            _cancel.Dispose();
+            Utils.LOG(Utils.LogPrefix.INFO, "Update has been canceled");
             PageManager.Switch(new ChoicePage());
         }
-
-
+        
         private void AddToLogFile(string s)
         {
             Dispatcher.Invoke(() => { LogWindow.Items.Add(s); });
@@ -181,11 +188,11 @@ namespace ror_updater
             string sFileHash = null;
             var filePath = $"{item.Directory}/{item.Name}";
 
-            Utils.LOG(Utils.LogVerb.INFO, $"Checking file: {item.Name}");
+            Utils.LOG(Utils.LogPrefix.INFO, $"Checking file: {item.Name}");
 
             if (!File.Exists(filePath)) return HashResult.NOT_FOUND;
             sFileHash = Utils.GetFileHash(filePath);
-            Utils.LOG(Utils.LogVerb.INFO,
+            Utils.LOG(Utils.LogPrefix.INFO,
                 $"{item.Name} Hash: Local: {sFileHash.ToLower()} Online: {item.Hash.ToLower()}");
             return sFileHash.ToLower().Equals(item.Hash.ToLower())
                 ? HashResult.UPTODATE
@@ -204,13 +211,13 @@ namespace ror_updater
 
             try
             {
-                Utils.LOG(Utils.LogVerb.INFO, $"ULR: {dlLink}");
-                Utils.LOG(Utils.LogVerb.INFO, $"File: {dest}");
+                Utils.LOG(Utils.LogPrefix.INFO, $"ULR: {dlLink}");
+                Utils.LOG(Utils.LogPrefix.INFO, $"File: {dest}");
                 await _webClient.DownloadFileTaskAsync(new Uri(dlLink), dest);
             }
             catch (Exception ex)
             {
-                Utils.LOG(Utils.LogVerb.ERROR, ex.ToString());
+                Utils.LOG(Utils.LogPrefix.ERROR, ex.ToString());
                 MessageBox.Show($"Failed to download file: {dest}", "Error", MessageBoxButton.OK,
                     MessageBoxImage.Error);
                 SentrySdk.CaptureException(ex);

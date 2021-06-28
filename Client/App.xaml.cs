@@ -56,19 +56,21 @@ namespace ror_updater
 
         public void InitApp(object sender, StartupEventArgs e)
         {
+            File.WriteAllText(Utils.LogPath, "Updater Started\n");
+#if !DEBUG
+            DispatcherUnhandledException += App_DispatcherUnhandledException;
+            SentrySdk.Init("https://c34f44d72cbc461e9787103e1474f04a@o84816.ingest.sentry.io/5625812");
+            SentrySdk.ConfigureScope(scope => { scope.AddAttachment(Utils.LogPath); });
+#endif
             _sForm = new StartupForm();
             _sForm.Show();
             // Render the form
             _sForm.Update();
 
-            File.WriteAllText(Utils.LogPath, "Updater Started\n");
-
-            SentrySdk.ConfigureScope(scope => { scope.AddAttachment(Utils.LogPath); });
-
             var assembly = Assembly.GetExecutingAssembly();
             var fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
             _localUpdaterVersion = fileVersionInfo.ProductVersion;
-            Utils.LOG(Utils.LogVerb.DEBUG, $"Updater version: {_localUpdaterVersion}");
+            Utils.LOG(Utils.LogPrefix.DEBUG, $"Updater version: {_localUpdaterVersion}");
 
             /* TODO: Not working?
              if (File.Exists("RoR.exe") && Utils.FileIsInUse("RoR.exe"))
@@ -79,9 +81,9 @@ namespace ror_updater
                 Quit();
             }*/
 
-            Utils.LOG(Utils.LogVerb.INFO, "Creating Web Handler");
+            Utils.LOG(Utils.LogPrefix.INFO, "Creating Web Handler");
             _webClient = new WebClient();
-            Utils.LOG(Utils.LogVerb.INFO, "Done.");
+            Utils.LOG(Utils.LogPrefix.INFO, "Done.");
 
             var currentDirectory = Directory.GetCurrentDirectory();
 
@@ -94,8 +96,8 @@ namespace ror_updater
                 }
                 catch (Exception ex)
                 {
-                    Utils.LOG(Utils.LogVerb.ERROR, "Failed to read settings file");
-                    Utils.LOG(Utils.LogVerb.ERROR, ex.ToString());
+                    Utils.LOG(Utils.LogPrefix.ERROR, "Failed to read settings file");
+                    Utils.LOG(Utils.LogPrefix.ERROR, ex.ToString());
                     SentrySdk.CaptureException(ex);
                     Settings = new Settings();
                     Settings.SetDefaults();
@@ -109,11 +111,11 @@ namespace ror_updater
 
             CDNUrl = Settings.ServerUrl;
 
-            Utils.LOG(Utils.LogVerb.INFO, "Done.");
-            Utils.LOG(Utils.LogVerb.INFO, $"Skip_updates: {Settings.SkipUpdates}");
+            Utils.LOG(Utils.LogPrefix.INFO, "Done.");
+            Utils.LOG(Utils.LogPrefix.INFO, $"Skip_updates: {Settings.SkipUpdates}");
 
             //Download list
-            Utils.LOG(Utils.LogVerb.INFO, $"Downloading main list from server: {Settings.ServerUrl}/branches.json");
+            Utils.LOG(Utils.LogPrefix.INFO, $"Downloading main list from server: {Settings.ServerUrl}/branches.json");
             try
             {
                 var brjson = _webClient.DownloadString($"{Settings.ServerUrl}/branches.json");
@@ -122,18 +124,18 @@ namespace ror_updater
             }
             catch (Exception ex)
             {
-                Utils.LOG(Utils.LogVerb.ERROR, ex.ToString());
+                Utils.LOG(Utils.LogPrefix.ERROR, ex.ToString());
                 SentrySdk.CaptureException(ex);
                 var result = MessageBox.Show("Could not connect to the main server.", "Error", MessageBoxButton.OK,
                     MessageBoxImage.Error);
                 if (result == MessageBoxResult.OK)
                 {
-                    Utils.LOG(Utils.LogVerb.ERROR, "Failed to connect to server.");
+                    Utils.LOG(Utils.LogPrefix.ERROR, "Failed to connect to server.");
                     Quit();
                 }
             }
 
-            Utils.LOG(Utils.LogVerb.DEBUG, $"Online updater version: {BranchInfo?.UpdaterVersion}");
+            Utils.LOG(Utils.LogPrefix.DEBUG, $"Online updater version: {BranchInfo?.UpdaterVersion}");
             if (_localUpdaterVersion != BranchInfo?.UpdaterVersion && !Settings.SkipUpdates)
             {
                 _sForm.label1.Text = @"Updating...";
@@ -146,17 +148,17 @@ namespace ror_updater
                 var versionInfo = FileVersionInfo.GetVersionInfo("RoR.exe");
                 LocalVersion = versionInfo.ProductVersion;
 
-                Utils.LOG(Utils.LogVerb.INFO, "Local RoR version: " + LocalVersion);
+                Utils.LOG(Utils.LogPrefix.INFO, "Local RoR version: " + LocalVersion);
             }
             catch
             {
                 LocalVersion = "unknown";
 
-                Utils.LOG(Utils.LogVerb.INFO, "Game Not found!");
+                Utils.LOG(Utils.LogPrefix.INFO, "Game Not found!");
             }
 
-            Utils.LOG(Utils.LogVerb.INFO, "Done.");
-            Utils.LOG(Utils.LogVerb.INFO, "Initialization done!");
+            Utils.LOG(Utils.LogPrefix.INFO, "Done.");
+            Utils.LOG(Utils.LogPrefix.INFO, "Initialization done!");
 
             _pageSwitcher = new PageSwitcher();
             _pageSwitcher.Show();
@@ -175,10 +177,10 @@ namespace ror_updater
             try
             {
                 var currdir = Directory.GetCurrentDirectory();
-                Utils.LOG(Utils.LogVerb.INFO, $"Downloading {Settings.ServerUrl}/selfupdate.exe");
+                Utils.LOG(Utils.LogPrefix.INFO, $"Downloading {Settings.ServerUrl}/selfupdate.exe");
                 _webClient.DownloadFile($"{Settings.ServerUrl}/selfupdate.exe",
                     $"{currdir}/ror-updater-selfupdate.exe");
-                Utils.LOG(Utils.LogVerb.INFO, $"Downloading {Settings.ServerUrl}/patch.zip");
+                Utils.LOG(Utils.LogPrefix.INFO, $"Downloading {Settings.ServerUrl}/patch.zip");
                 _webClient.DownloadFile($"{Settings.ServerUrl}/patch.zip", $"{Path.GetTempPath()}/patch.zip");
 
                 Thread.Sleep(100); //Wait a bit
@@ -186,7 +188,7 @@ namespace ror_updater
             }
             catch (Exception ex)
             {
-                Utils.LOG(Utils.LogVerb.ERROR, ex.ToString());
+                Utils.LOG(Utils.LogPrefix.ERROR, ex.ToString());
                 MessageBox.Show("SelfUpdate error", "Error", MessageBoxButton.OK,
                     MessageBoxImage.Error);
                 SentrySdk.CaptureException(ex);
@@ -214,8 +216,8 @@ namespace ror_updater
             }
             catch (Exception ex)
             {
-                Utils.LOG(Utils.LogVerb.ERROR, $"Failed to switch to branch {branchname}");
-                Utils.LOG(Utils.LogVerb.ERROR, ex.ToString());
+                Utils.LOG(Utils.LogPrefix.ERROR, $"Failed to switch to branch {branchname}");
+                Utils.LOG(Utils.LogPrefix.ERROR, ex.ToString());
                 SelectedBranch = BranchInfo.Branches.First().Value;
             }
 
@@ -232,13 +234,13 @@ namespace ror_updater
             }
             catch (Exception ex)
             {
-                Utils.LOG(Utils.LogVerb.ERROR, ex.ToString());
+                Utils.LOG(Utils.LogPrefix.ERROR, ex.ToString());
                 MessageBox.Show("Failed to download branch info", "Error", MessageBoxButton.OK,
                     MessageBoxImage.Error);
                 SentrySdk.CaptureException(ex);
             }
 
-            Utils.LOG(Utils.LogVerb.INFO,
+            Utils.LOG(Utils.LogPrefix.INFO,
                 $"Switched to branch: {SelectedBranch.Name} Version: {ReleaseInfoData.Version}");
         }
 
@@ -258,10 +260,6 @@ namespace ror_updater
 
         private App()
         {
-#if !DEBUG
-            DispatcherUnhandledException += App_DispatcherUnhandledException;
-            SentrySdk.Init("https://c34f44d72cbc461e9787103e1474f04a@o84816.ingest.sentry.io/5625812");
-#endif
             _lazyApp = new Lazy<App>(() => this);
         }
 

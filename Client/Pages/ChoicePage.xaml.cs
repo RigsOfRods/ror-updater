@@ -29,7 +29,7 @@ namespace ror_updater
         public ChoicePage()
         {
             InitializeComponent();
-            Utils.LOG(Utils.LogVerb.INFO, "Choice menu opened.");
+            Utils.LOG(Utils.LogPrefix.INFO, "Choice menu opened.");
 
             //Repair game is also update game, both do the same, both do their work.
 
@@ -76,21 +76,21 @@ namespace ror_updater
 
         private void Install_button_Click(object sender, RoutedEventArgs e)
         {
-            Utils.LOG(Utils.LogVerb.INFO, "Selected Install.");
+            Utils.LOG(Utils.LogPrefix.INFO, "Selected Install.");
             App.Choice = UpdateChoice.INSTALL;
             PageManager.Switch(new UpdatePage());
         }
 
         private void Repair_button_Click(object sender, RoutedEventArgs e)
         {
-            Utils.LOG(Utils.LogVerb.INFO, "Selected Repair.");
+            Utils.LOG(Utils.LogPrefix.INFO, "Selected Repair.");
             App.Choice = UpdateChoice.REPAIR;
             PageManager.Switch(new UpdatePage());
         }
 
         private void Update_button_Click(object sender, RoutedEventArgs e)
         {
-            Utils.LOG(Utils.LogVerb.INFO, "Selected Update.");
+            Utils.LOG(Utils.LogPrefix.INFO, "Selected Update.");
             App.Choice = UpdateChoice.UPDATE;
             PageManager.Switch(new UpdatePage());
         }
