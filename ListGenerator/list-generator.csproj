@@ -45,7 +45,7 @@
           <Private>True</Private>
         </Reference>
         <Reference Include="System.CommandLine, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
-          <HintPath>..\packages\System.CommandLine.2.0.0-beta1.21216.1\lib\netstandard2.0\System.CommandLine.dll</HintPath>
+          <HintPath>..\packages\System.CommandLine.2.0.0-beta1.21308.1\lib\netstandard2.0\System.CommandLine.dll</HintPath>
           <Private>True</Private>
         </Reference>
         <Reference Include="System.Core" />
