@@ -215,6 +215,10 @@ namespace ror_updater
                 Utils.LOG(Utils.LogPrefix.INFO, $"File: {dest}");
                 await _webClient.DownloadFileTaskAsync(new Uri(dlLink), dest);
             }
+            catch (WebException ex) when (ex.Status == WebExceptionStatus.RequestCanceled)
+            {
+                Utils.LOG(Utils.LogPrefix.INFO, ex.ToString());
+            }
             catch (Exception ex)
             {
                 Utils.LOG(Utils.LogPrefix.ERROR, ex.ToString());
