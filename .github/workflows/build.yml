@@ -21,19 +21,19 @@ jobs:
         run: cmake -P ./tools/copy_build.cmake
 
       - name: Upload client
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: client
           path: redist/client
 
       - name: Upload listgenerator
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: listgenerator
           path: redist/listgenerator
     
       - name: Upload client
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: selfupdater
           path: redist/selfupdater
