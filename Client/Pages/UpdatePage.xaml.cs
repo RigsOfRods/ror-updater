@@ -34,7 +34,7 @@ namespace ror_updater
     {
         private readonly WebClient _webClient;
 
-        private readonly CancellationTokenSource _cancel = new();
+        private readonly Task _updateTask;
 
         private static bool _hasErrored = false;
 
@@ -48,10 +48,11 @@ namespace ror_updater
             OverallProgress.Maximum = App.Instance.ReleaseInfoData.Filelist.Count;
             _webClient.DownloadProgressChanged += ProgressChanged;
 
-            RunFileUpdate();
+            _updateTask = RunFileUpdate();
+            _updateTask.Start();
         }
 
-        private async void RunFileUpdate()
+        private async Task RunFileUpdate()
         {
             // The Progress<T> constructor captures our UI context,
             //  so the lambda will be run on the UI thread.
@@ -67,15 +68,15 @@ namespace ror_updater
             {
                 case UpdateChoice.INSTALL:
                     Welcome_Label.Content = "Installing Rigs of Rods";
-                    await Task.Run(() => InstallGame(progress), _cancel.Token);
+                    await InstallGame(progress);
                     break;
                 case UpdateChoice.UPDATE:
                     Welcome_Label.Content = "Updating Rigs of Rods";
-                    await Task.Run(() => UpdateGame(progress), _cancel.Token);
+                    await UpdateGame(progress);
                     break;
                 case UpdateChoice.REPAIR:
                     Welcome_Label.Content = "Repairing Rigs of Rods";
-                    await Task.Run(() => UpdateGame(progress), _cancel.Token);
+                    await UpdateGame(progress);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -91,7 +92,6 @@ namespace ror_updater
             var i = 0;
             foreach (var file in App.Instance.ReleaseInfoData.Filelist)
             {
-                if (_cancel.IsCancellationRequested) break;
                 AddToLogFile($"Downloading file: {file.Directory.TrimStart('.')}/{file.Name}");
                 await DownloadFile(file.Directory, file.Name);
                 progress?.Report(i++);
@@ -110,7 +110,6 @@ namespace ror_updater
             var i = 0;
             foreach (var file in App.Instance.ReleaseInfoData.Filelist)
             {
-                if (_cancel.IsCancellationRequested) break;
                 var fileStatus = HashFile(file);
                 AddToLogFile($"Checking file: {file.Directory.TrimStart('.')}/{file.Name}");
                 filesStatus.Add(new FileStatus { File = file, Status = fileStatus });
@@ -122,7 +121,6 @@ namespace ror_updater
             i = 0;
             foreach (var item in filesStatus)
             {
-                if (_cancel.IsCancellationRequested) break;
                 progress?.Report(i++);
 
                 switch (item.Status)
@@ -166,9 +164,9 @@ namespace ror_updater
 
         private void CancelOperation()
         {
-            _cancel.Cancel();
             _webClient.CancelAsync();
-            _cancel.Dispose();
+            _webClient.Dispose();
+            _updateTask.Dispose();
             Utils.LOG(Utils.LogPrefix.INFO, "Update has been canceled");
             PageManager.Switch(new ChoicePage());
         }
