@@ -5,6 +5,7 @@ using System.CommandLine.Invocation;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using ror_updater;
 
@@ -14,18 +15,16 @@ namespace list_generator
     {
         static int Main(string[] args)
         {
-            var cmd = new RootCommand
-            {
-                new Argument<string>("path", "Path to files"),
-                new Option<string?>(new[] {"--branch", "-b"}, "The Branch name"),
-            };
+            var path = new Argument<string>("path", "Path to files");
+            var branchname = new Option<string?>(new[] { "--branch", "-b" }, "The Branch name");
+            var cmd = new RootCommand();
 
-            cmd.Handler = CommandHandler.Create<string, string?, IConsole>(GenerateJsonInfo);
+            cmd.SetHandler((p, b) => GenerateJsonInfo(b, p!), path, branchname);
 
             return cmd.Invoke(args);
         }
 
-        static void GenerateJsonInfo(string path, string? branchname, IConsole console)
+        static void GenerateJsonInfo(string path, string? branchname)
         {
             if (string.IsNullOrEmpty(branchname))
                 branchname = "Release";
@@ -39,9 +38,9 @@ namespace list_generator
             foreach (var fileName in filePaths)
             {
                 // Skip info.json
-                if(fileName.Contains("info.json"))
+                if (fileName.Contains("info.json"))
                     continue;
-                
+
                 Console.WriteLine($"Hashing {fileName}");
 
                 var fileInfo = new FileInfo(fileName);
@@ -67,7 +66,7 @@ namespace list_generator
                     Filelist = filelist
                 }
             ));
-            
+
 
             File.WriteAllText("./branches.json.example", JsonConvert.SerializeObject(
                 new BranchInfo
@@ -75,7 +74,7 @@ namespace list_generator
                     UpdaterVersion = "1.10",
                     Branches = new Dictionary<string, Branch>
                     {
-                        {branchname, new Branch {Name = branchname, Url = $"/{branchname.ToLower()}/"}}
+                        { branchname, new Branch { Name = branchname, Url = $"/{branchname.ToLower()}/" } }
                     }
                 }
             ));

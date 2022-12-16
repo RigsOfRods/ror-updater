@@ -28,6 +28,7 @@ namespace ror_updater
     internal class Utils
     {
         internal static readonly string LogPath = $@"{Path.GetTempPath()}RoR_Updater_Log.txt";
+        private static readonly object _syncObject = new object();
 
         internal enum LogPrefix
         {
@@ -38,9 +39,10 @@ namespace ror_updater
 
         public static void LOG(LogPrefix prefix, string str)
         {
-            StreamWriter file;
-            lock (file = new StreamWriter(LogPath, true))
+            lock (_syncObject)
             {
+                var file = new StreamWriter(LogPath, true);
+
                 var pf = prefix switch
                 {
                     LogPrefix.DEBUG => "Debug",
