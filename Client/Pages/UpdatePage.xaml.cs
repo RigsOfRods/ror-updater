@@ -24,7 +24,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using Sentry;
 
 namespace ror_updater
 {
@@ -37,10 +36,12 @@ namespace ror_updater
 
         private readonly CancellationTokenSource _cancel = new();
 
+        private static bool _hasErrored = false;
+
         public UpdatePage()
         {
             InitializeComponent();
-            ((INotifyCollectionChanged) LogWindow.Items).CollectionChanged += ListView_CollectionChanged;
+            ((INotifyCollectionChanged)LogWindow.Items).CollectionChanged += ListView_CollectionChanged;
 
             _webClient = new WebClient();
 
@@ -112,7 +113,7 @@ namespace ror_updater
                 if (_cancel.IsCancellationRequested) break;
                 var fileStatus = HashFile(file);
                 AddToLogFile($"Checking file: {file.Directory.TrimStart('.')}/{file.Name}");
-                filesStatus.Add(new FileStatus {File = file, Status = fileStatus});
+                filesStatus.Add(new FileStatus { File = file, Status = fileStatus });
                 progress?.Report(i++);
             }
 
@@ -144,6 +145,12 @@ namespace ror_updater
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
+
+                if (_hasErrored)
+                {
+                    CancelOperation();
+                    return;
+                }
             }
 
             Utils.LOG(Utils.LogPrefix.INFO, "Done.");
@@ -154,13 +161,18 @@ namespace ror_updater
             var result = MessageBox.Show("Are you sure you want to stop the update?", "Confirmation",
                 MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (result != MessageBoxResult.Yes) return;
+            CancelOperation();
+        }
+
+        private void CancelOperation()
+        {
             _cancel.Cancel();
             _webClient.CancelAsync();
             _cancel.Dispose();
             Utils.LOG(Utils.LogPrefix.INFO, "Update has been canceled");
             PageManager.Switch(new ChoicePage());
         }
-        
+
         private void AddToLogFile(string s)
         {
             Dispatcher.Invoke(() => { LogWindow.Items.Add(s); });
@@ -217,14 +229,15 @@ namespace ror_updater
             }
             catch (WebException ex) when (ex.Status == WebExceptionStatus.RequestCanceled)
             {
+                _hasErrored = true;
                 Utils.LOG(Utils.LogPrefix.INFO, ex.ToString());
             }
             catch (Exception ex)
             {
+                _hasErrored = true;
                 Utils.LOG(Utils.LogPrefix.ERROR, ex.ToString());
                 MessageBox.Show($"Failed to download file: {dest}", "Error", MessageBoxButton.OK,
                     MessageBoxImage.Error);
-                SentrySdk.CaptureException(ex);
             }
         }
 

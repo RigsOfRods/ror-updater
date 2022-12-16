@@ -25,7 +25,6 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
 using Newtonsoft.Json;
-using Sentry;
 
 namespace ror_updater
 {
@@ -57,11 +56,6 @@ namespace ror_updater
         public void InitApp(object sender, StartupEventArgs e)
         {
             File.WriteAllText(Utils.LogPath, "Updater Started\n");
-#if !DEBUG
-            DispatcherUnhandledException += App_DispatcherUnhandledException;
-            SentrySdk.Init("https://c34f44d72cbc461e9787103e1474f04a@o84816.ingest.sentry.io/5625812");
-            SentrySdk.ConfigureScope(scope => { scope.AddAttachment(Utils.LogPath); });
-#endif
             _sForm = new StartupForm();
             _sForm.Show();
             // Render the form
@@ -98,7 +92,6 @@ namespace ror_updater
                 {
                     Utils.LOG(Utils.LogPrefix.ERROR, "Failed to read settings file");
                     Utils.LOG(Utils.LogPrefix.ERROR, ex.ToString());
-                    SentrySdk.CaptureException(ex);
                     Settings = new Settings();
                     Settings.SetDefaults();
                 }
@@ -125,7 +118,6 @@ namespace ror_updater
             catch (Exception ex)
             {
                 Utils.LOG(Utils.LogPrefix.ERROR, ex.ToString());
-                SentrySdk.CaptureException(ex);
                 var result = MessageBox.Show("Could not connect to the main server.", "Error", MessageBoxButton.OK,
                     MessageBoxImage.Error);
                 if (result == MessageBoxResult.OK)
@@ -191,7 +183,6 @@ namespace ror_updater
                 Utils.LOG(Utils.LogPrefix.ERROR, ex.ToString());
                 MessageBox.Show("SelfUpdate error", "Error", MessageBoxButton.OK,
                     MessageBoxImage.Error);
-                SentrySdk.CaptureException(ex);
             }
 
             Quit();
@@ -237,19 +228,10 @@ namespace ror_updater
                 Utils.LOG(Utils.LogPrefix.ERROR, ex.ToString());
                 MessageBox.Show("Failed to download branch info", "Error", MessageBoxButton.OK,
                     MessageBoxImage.Error);
-                SentrySdk.CaptureException(ex);
             }
 
             Utils.LOG(Utils.LogPrefix.INFO,
                 $"Switched to branch: {SelectedBranch.Name} Version: {ReleaseInfoData.Version}");
-        }
-
-        void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
-        {
-            SentrySdk.CaptureException(e.Exception);
-
-            // If you want to avoid the application from crashing:
-            //e.Handled = true;
         }
 
         #region Singleton
