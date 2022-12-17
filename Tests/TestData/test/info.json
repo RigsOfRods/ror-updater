@@ -1,0 +1,15 @@
+{
+  "Version": "2022.12-RC1",
+  "Filelist": [
+    {
+      "Name": "file1.txt",
+      "Hash": "b68088fa94cc126d0c3371eab844bec5",
+      "Directory": "."
+    },
+    {
+      "Name": "file2.txt",
+      "Hash": "20fc92f68d957da0717ad7dd53740ebc",
+      "Directory": "."
+    }
+  ]
+}

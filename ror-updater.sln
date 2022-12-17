@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "selfupdate", "SelfUpdater\s
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "list-generator", "ListGenerator\list-generator.csproj", "{8B0C3EE6-2885-4EED-A585-FE67BA110D24}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tests", "tests\tests.csproj", "{BDE974DE-1566-4882-AF1F-41EEF7D8973D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{8B0C3EE6-2885-4EED-A585-FE67BA110D24}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8B0C3EE6-2885-4EED-A585-FE67BA110D24}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8B0C3EE6-2885-4EED-A585-FE67BA110D24}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDE974DE-1566-4882-AF1F-41EEF7D8973D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDE974DE-1566-4882-AF1F-41EEF7D8973D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDE974DE-1566-4882-AF1F-41EEF7D8973D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDE974DE-1566-4882-AF1F-41EEF7D8973D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

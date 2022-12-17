@@ -218,6 +218,7 @@
     <Compile Include="..\Shared\Utils.cs">
       <Link>Utils.cs</Link>
     </Compile>
+    <Compile Include="Tasks\RunUpdate.cs" />
     <Page Include="PageSwitcher.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

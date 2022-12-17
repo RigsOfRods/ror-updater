@@ -24,6 +24,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using ror_updater.Tasks;
 
 namespace ror_updater
 {
@@ -32,27 +33,17 @@ namespace ror_updater
     /// </summary>
     public partial class UpdatePage : UserControl, ISwitchable
     {
-        private readonly WebClient _webClient;
-
-        private readonly CancellationTokenSource _cancel = new();
-
-        private static bool _hasErrored = false;
+        private RunUpdate _updateTask;
 
         public UpdatePage()
         {
             InitializeComponent();
             ((INotifyCollectionChanged)LogWindow.Items).CollectionChanged += ListView_CollectionChanged;
 
-            _webClient = new WebClient();
+            var wc = new WebClient();
 
             OverallProgress.Maximum = App.Instance.ReleaseInfoData.Filelist.Count;
-            _webClient.DownloadProgressChanged += ProgressChanged;
-
-            RunFileUpdate();
-        }
-
-        private async void RunFileUpdate()
-        {
+            wc.DownloadProgressChanged += ProgressChanged;
             // The Progress<T> constructor captures our UI context,
             //  so the lambda will be run on the UI thread.
             // https://blog.stephencleary.com/2012/02/reporting-progress-from-async-tasks.html
@@ -61,21 +52,28 @@ namespace ror_updater
                 OverallProgress.Value = fileid;
                 ProgressLabel.Content = fileid + "/" + App.Instance.ReleaseInfoData.Filelist.Count;
             });
+            
+            _updateTask = new RunUpdate(AddToLogFile, progress, wc);
 
+            RunFileUpdate();
+        }
+
+        private async void RunFileUpdate()
+        {
             // DoProcessing is run on the thread pool.
             switch (App.Choice)
             {
                 case UpdateChoice.INSTALL:
                     Welcome_Label.Content = "Installing Rigs of Rods";
-                    await Task.Run(() => InstallGame(progress), _cancel.Token);
+                    await _updateTask.InstallGame();
                     break;
                 case UpdateChoice.UPDATE:
                     Welcome_Label.Content = "Updating Rigs of Rods";
-                    await Task.Run(() => UpdateGame(progress), _cancel.Token);
+                    await _updateTask.UpdateGame();
                     break;
                 case UpdateChoice.REPAIR:
                     Welcome_Label.Content = "Repairing Rigs of Rods";
-                    await Task.Run(() => UpdateGame(progress), _cancel.Token);
+                    await _updateTask.UpdateGame();
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -84,77 +82,6 @@ namespace ror_updater
             PageManager.Switch(new UpdateDonePage());
         }
 
-        private async Task InstallGame(IProgress<int> progress)
-        {
-            Utils.LOG(Utils.LogPrefix.INFO, "Installing Game...");
-
-            var i = 0;
-            foreach (var file in App.Instance.ReleaseInfoData.Filelist)
-            {
-                if (_cancel.IsCancellationRequested) break;
-                AddToLogFile($"Downloading file: {file.Directory.TrimStart('.')}/{file.Name}");
-                await DownloadFile(file.Directory, file.Name);
-                progress?.Report(i++);
-            }
-
-            Utils.LOG(Utils.LogPrefix.INFO, "Done.");
-        }
-
-        private async Task UpdateGame(IProgress<int> progress)
-        {
-            Utils.LOG(Utils.LogPrefix.INFO, "Updating Game...");
-
-            var filesStatus = new List<FileStatus>();
-
-            AddToLogFile("Checking for outdated files...");
-            var i = 0;
-            foreach (var file in App.Instance.ReleaseInfoData.Filelist)
-            {
-                if (_cancel.IsCancellationRequested) break;
-                var fileStatus = HashFile(file);
-                AddToLogFile($"Checking file: {file.Directory.TrimStart('.')}/{file.Name}");
-                filesStatus.Add(new FileStatus { File = file, Status = fileStatus });
-                progress?.Report(i++);
-            }
-
-            AddToLogFile("Done, updating outdated files now...");
-
-            i = 0;
-            foreach (var item in filesStatus)
-            {
-                if (_cancel.IsCancellationRequested) break;
-                progress?.Report(i++);
-
-                switch (item.Status)
-                {
-                    case HashResult.UPTODATE:
-                        Utils.LOG(Utils.LogPrefix.INFO, $"file up to date: {item.File.Name}");
-                        AddToLogFile($"File up to date: {item.File.Directory.TrimStart('.')}/{item.File.Name}");
-                        break;
-                    case HashResult.OUTOFDATE:
-                        AddToLogFile($"File out of date: {item.File.Directory.TrimStart('.')}/{item.File.Name}");
-                        Utils.LOG(Utils.LogPrefix.INFO, $"File out of date: {item.File.Name}");
-                        await DownloadFile(item.File.Directory, item.File.Name);
-                        break;
-                    case HashResult.NOT_FOUND:
-                        Utils.LOG(Utils.LogPrefix.INFO, $"File doesnt exits: {item.File.Name}");
-                        AddToLogFile(
-                            $"Downloading new file: {item.File.Directory.TrimStart('.')}/{item.File.Name}");
-                        await DownloadFile(item.File.Directory, item.File.Name);
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-
-                if (_hasErrored)
-                {
-                    CancelOperation();
-                    return;
-                }
-            }
-
-            Utils.LOG(Utils.LogPrefix.INFO, "Done.");
-        }
 
         private void button_back_Click(object sender, RoutedEventArgs e)
         {
@@ -166,9 +93,7 @@ namespace ror_updater
 
         private void CancelOperation()
         {
-            _cancel.Cancel();
-            _webClient.CancelAsync();
-            _cancel.Dispose();
+            _updateTask.Cancel();
             Utils.LOG(Utils.LogPrefix.INFO, "Update has been canceled");
             PageManager.Switch(new ChoicePage());
         }
@@ -195,64 +120,6 @@ namespace ror_updater
                 LogWindow.ScrollIntoView(e.NewItems[0]);
         }
 
-        HashResult HashFile(PFileInfo item)
-        {
-            string sFileHash = null;
-            var filePath = $"{item.Directory}/{item.Name}";
-
-            Utils.LOG(Utils.LogPrefix.INFO, $"Checking file: {item.Name}");
-
-            if (!File.Exists(filePath)) return HashResult.NOT_FOUND;
-            sFileHash = Utils.GetFileHash(filePath);
-            Utils.LOG(Utils.LogPrefix.INFO,
-                $"{item.Name} Hash: Local: {sFileHash.ToLower()} Online: {item.Hash.ToLower()}");
-            return sFileHash.ToLower().Equals(item.Hash.ToLower())
-                ? HashResult.UPTODATE
-                : HashResult.OUTOFDATE;
-        }
-
-        private async Task DownloadFile(string dir, string file)
-        {
-            if (!Directory.Exists(dir))
-                Directory.CreateDirectory(dir);
-
-            Thread.Sleep(100);
-            var dest = $"{dir}/{file}";
-            var path = dir.Replace(".", "");
-            var dlLink = $"{App.Instance.CDNUrl}/{path}/{file}";
-
-            try
-            {
-                Utils.LOG(Utils.LogPrefix.INFO, $"ULR: {dlLink}");
-                Utils.LOG(Utils.LogPrefix.INFO, $"File: {dest}");
-                await _webClient.DownloadFileTaskAsync(new Uri(dlLink), dest);
-            }
-            catch (WebException ex) when (ex.Status == WebExceptionStatus.RequestCanceled)
-            {
-                _hasErrored = true;
-                Utils.LOG(Utils.LogPrefix.INFO, ex.ToString());
-            }
-            catch (Exception ex)
-            {
-                _hasErrored = true;
-                Utils.LOG(Utils.LogPrefix.ERROR, ex.ToString());
-                MessageBox.Show($"Failed to download file: {dest}", "Error", MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-            }
-        }
-
-        private class FileStatus
-        {
-            public PFileInfo File;
-            public HashResult Status;
-        }
-
-        private enum HashResult
-        {
-            UPTODATE,
-            OUTOFDATE,
-            NOT_FOUND
-        }
 
         #region ISwitchable Members
 
