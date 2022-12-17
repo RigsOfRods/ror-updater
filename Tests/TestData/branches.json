@@ -1,0 +1,13 @@
+{
+  "UpdaterVersion": "1.1.0.0",
+  "Branches": {
+    "release": {
+      "Name": "Release",
+      "Url": "release"
+    },
+    "release-with-contentpack": {
+      "Name": "Release with ContentPack",
+      "Url": "release-contentpack"
+    }
+  }
+}

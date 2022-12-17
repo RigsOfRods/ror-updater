@@ -17,6 +17,11 @@ jobs:
           nuget restore ror-updater.sln
           msbuild /p:Configuration=Release /p:Platform="Any CPU" -p:RestorePackagesConfig=true /m ror-updater.sln
 
+      - name: Test
+        run: |
+          cd Tests\bin\Release\
+          ..\..\..\packages\NUnit.ConsoleRunner.3.16.0\tools\nunit3-console.exe tests.dll
+
       - name: Create redis folder
         run: cmake -P ./tools/copy_build.cmake
 
@@ -31,7 +36,7 @@ jobs:
         with:
           name: listgenerator
           path: redist/listgenerator
-    
+
       - name: Upload client
         uses: actions/upload-artifact@v3
         with:
